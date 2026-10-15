@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Copilot, Fabric &amp; AI in Data Work — Modules 6–12</title>
+<style>
+:root{
+  --bg:#0d1117;--panel:#161b22;--panel2:#1c2330;--line:#2a3340;--text:#e6edf3;--muted:#9aa7b4;
+  --teal:#2bb3c0;--teal-d:#177E89;--orange:#FD8332;--green:#3fb950;--red:#f85149;--yellow:#e3b341;--purple:#a371f7;
+  --code:#0a0e14;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:15.5px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+a{color:var(--teal)}
+.layout{display:grid;grid-template-columns:270px 1fr;min-height:100vh}
+nav{position:sticky;top:0;height:100vh;overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:18px 14px}
+nav h2{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);margin:6px 8px 14px}
+nav a{display:block;color:var(--text);text-decoration:none;padding:7px 10px;border-radius:8px;font-size:14px}
+nav a:hover{background:var(--panel2)}
+nav a small{display:block;color:var(--muted);font-size:12px}
+main{padding:28px 44px 80px;max-width:1080px}
+header.hero{background:linear-gradient(135deg,#123a40,#161b22 60%);border:1px solid var(--line);border-radius:16px;padding:26px 28px;margin-bottom:28px}
+header.hero h1{margin:0 0 6px;font-size:28px}
+header.hero p{margin:4px 0;color:var(--muted)}
+.pill{display:inline-block;background:var(--teal-d);color:#fff;border-radius:999px;padding:2px 10px;font-size:12px;margin-right:6px}
+.pill.o{background:var(--orange);color:#1b1b1b}
+section.mod{border-top:1px solid var(--line);padding-top:26px;margin-top:38px}
+h2.mt{font-size:24px;margin:0 0 4px}
+h2.mt .num{color:var(--orange);margin-right:8px}
+.meta{color:var(--muted);font-size:13.5px;margin-bottom:14px}
+h3{color:var(--teal);margin:26px 0 8px;font-size:18px}
+h4{margin:18px 0 6px;font-size:15.5px}
+table{width:100%;border-collapse:collapse;margin:12px 0 18px;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--teal)}
+tr:nth-child(even) td{background:#121820}
+code{background:var(--panel2);padding:1px 6px;border-radius:5px;font-family:Consolas,"Cascadia Code",monospace;font-size:13.5px;color:#ffd7a8}
+.cb{position:relative;margin:12px 0 18px}
+.cb pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow:auto;margin:0;font:13.5px/1.55 Consolas,"Cascadia Code",monospace;color:#d6e2ee}
+.cb .lbl{position:absolute;top:-10px;left:12px;background:var(--teal-d);color:#fff;font-size:11px;padding:1px 8px;border-radius:6px;letter-spacing:.04em}
+.cb button{position:absolute;top:8px;right:8px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer}
+.cb button:hover{border-color:var(--teal)}
+.cb button.ok{background:var(--green);color:#08130a;border-color:var(--green)}
+.call{border-left:4px solid;border-radius:8px;padding:12px 16px;margin:14px 0;background:var(--panel)}
+.call b.t{display:block;margin-bottom:4px}
+.call.ok{border-color:var(--green)} .call.ok b.t{color:var(--green)}
+.call.warn{border-color:var(--yellow)} .call.warn b.t{color:var(--yellow)}
+.call.bad{border-color:var(--red)} .call.bad b.t{color:var(--red)}
+.call.info{border-color:var(--teal)} .call.info b.t{color:var(--teal)}
+.call.trainer{border-color:var(--purple)} .call.trainer b.t{color:var(--purple)}
+ol.steps{counter-reset:s;list-style:none;padding-left:0}
+ol.steps>li{counter-increment:s;position:relative;padding:8px 0 8px 44px;border-bottom:1px dashed var(--line)}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:8px;width:30px;height:30px;border-radius:50%;background:var(--teal-d);color:#fff;font-weight:600;display:flex;align-items:center;justify-content:center;font-size:14px}
+.path{font-family:Consolas,monospace;background:#10262a;border:1px solid #1e4b52;color:#9fe7ee;padding:2px 8px;border-radius:6px;font-size:13.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h4{margin-top:0}
+.do h4{color:var(--green)} .dont h4{color:var(--red)}
+.check li{list-style:none;margin-left:-20px}
+.check li::before{content:"☐ ";color:var(--teal)}
+.deliv{background:#1d1a12;border:1px solid #5a4614;border-radius:12px;padding:14px 18px;margin:18px 0}
+.deliv b{color:var(--orange)}
+.kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 6px;font-size:12.5px;background:var(--panel2)}
+.printcard{background:#fff;color:#111;border-radius:12px;padding:22px 26px;margin:14px 0}
+.printcard h3{color:#177E89;margin-top:0}
+.printcard .grid2 .card{background:#f7f7f2;border-color:#ddd;color:#111}
+.printcard .do h4{color:#1a7f37}.printcard .dont h4{color:#cf222e}
+.printcard .bug{background:#fff4e8;border:1px solid #FD8332;border-radius:8px;padding:10px 14px;margin-top:12px}
+.btnrow{margin:8px 0}
+.btn{background:var(--orange);color:#1b1b1b;border:0;border-radius:8px;padding:7px 14px;font-weight:600;cursor:pointer}
+footer{color:var(--muted);font-size:13px;margin-top:60px;border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:900px){.layout{grid-template-columns:1fr}nav{position:static;height:auto}main{padding:20px 16px}.grid2{grid-template-columns:1fr}}
+@media print{
+  body{background:#fff;color:#000} nav,.cb button,.btnrow{display:none}
+  .layout{display:block} main{max-width:none;padding:0}
+  body.print-card-only *{visibility:hidden}
+  body.print-card-only #card-print-wrap, body.print-card-only #card-print-wrap *{visibility:visible}
+  body.print-card-only #card-print-wrap{position:absolute;left:0;top:0;width:100%}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <h2>Modules 6–12</h2>
+  <a href="#plan">Session plan<small>3h timing + outputs</small></a>
+  <a href="#m6">6 · Tokens &amp; Effective Use<small>0:00–0:30</small></a>
+  <a href="#m7">7 · Usage &amp; Token Tracking<small>0:30–0:45</small></a>
+  <a href="#m8">8 · Fabric Git Round Trip<small>0:45–1:30</small></a>
+  <a href="#m9">9 · Auth &amp; Permissions<small>1:30–1:50</small></a>
+  <a href="#m10">10 · When NOT to Use AI<small>1:50–2:10</small></a>
+  <a href="#m11">11 · Do's &amp; Don'ts Card<small>2:10–2:35</small></a>
+  <a href="#m12">12 · Validating AI Code<small>2:35–3:00</small></a>
+  <a href="#wrap">Wrap-up &amp; submission<small>what to hand in</small></a>
+</nav>
+
+<main>
+<header class="hero">
+  <span class="pill">GitHub Copilot</span><span class="pill">Microsoft Fabric</span><span class="pill o">Insurance Data Engineering</span>
+  <h1>Copilot, Fabric &amp; Responsible AI in Data Work</h1>
+  <p>Modules 6–12 · 3-hour hands-on block · every module ends with a written artefact you keep.</p>
+  <p>Notes current as of October 2026. Copilot billing, dashboards and Fabric permissions changed several times in 2025–26 — re-check the menu names on your tenant before class.</p>
+</header>
+
+<!-- ============ PLAN ============ -->
+<section id="plan">
+<h3>Session plan</h3>
+<table>
+<tr><th>Time</th><th>Module</th><th>Min</th><th>Hands-on output (what learners hand in)</th></tr>
+<tr><td>0:00–0:30</td><td>6. Tokens &amp; Effective Token Use</td><td>30</td><td>Comparison table: same question on 500+ line file vs scoped selection vs <code>#file</code>-scoped</td></tr>
+<tr><td>0:30–0:45</td><td>7. Usage &amp; Token Tracking (Org)</td><td>15</td><td>Weekly usage pulled/requested + one under-use or misuse finding</td></tr>
+<tr><td>0:45–1:30</td><td>8. Fabric Workspace Connection</td><td>45</td><td>Git round-trip log (pull → change → push → sync back) + "one thing that broke"</td></tr>
+<tr><td>1:30–1:50</td><td>9. Authentication &amp; Permissions</td><td>20</td><td>Onboarding permission checklist for Git-integrated Fabric</td></tr>
+<tr><td>1:50–2:10</td><td>10. When NOT to Use AI</td><td>20</td><td>Three real situations from last month + risk</td></tr>
+<tr><td>2:10–2:35</td><td>11. Do's &amp; Don'ts for AI in Data Work</td><td>25</td><td>One-page insurance-data Do/Don't card anchored on a real bug</td></tr>
+<tr><td>2:35–3:00</td><td>12. Validating AI-Generated Code</td><td>25</td><td>Validation checklist for one AI-generated stored procedure, run, pass/fail recorded</td></tr>
+</table>
+<div class="call trainer"><b class="t">Trainer prep (do this the day before)</b>
+<ul>
+<li>Have one <b>real 500+ line file</b> ready per learner (a stored procedure, a notebook exported as <code>.py</code>, or a pipeline JSON). Sanitise any customer data first.</li>
+<li>Confirm a Fabric workspace on a <b>Fabric capacity</b> (trial is fine) with Git integration switched on, plus an empty GitHub or Azure DevOps repo per pair.</li>
+<li>Find out who in the org can open the Copilot usage dashboard (org owner / billing manager / custom role). Learners without access will use the <b>request template</b> in Module 7.</li>
+<li>Collect 2–3 sentence write-ups of real past incidents (e.g., the Everguard FULL-load issue) — Modules 10–12 are built on them.</li>
+</ul></div>
+</section>
+
+<!-- ============ MODULE 6 ============ -->
+<section class="mod" id="m6">
+<h2 class="mt"><span class="num">6</span>Tokens &amp; Effective Token Use</h2>
+<div class="meta">0:00 – 0:30 · 30 min · 10 min concept + 20 min lab</div>
+
+<h3>6.1 Why this matters more in 2026</h3>
+<p>Tokens used to be a "quality" topic — too much context makes answers vaguer. Since <b>1 June 2026</b> they are also a <b>cost</b> topic. GitHub replaced premium requests with <b>GitHub AI Credits</b>, and credits are consumed according to token usage (input, output and cached tokens) at each model's published rate. One credit = US $0.01. So a sloppy prompt over a 900-line file is now visibly more expensive than a scoped one.</p>
+
+<h3>6.2 Concepts in plain words</h3>
+<table>
+<tr><th>Term</th><th>What it means for a data engineer</th></tr>
+<tr><td><b>Token</b></td><td>A chunk of text the model reads/writes. Rough rule: ~4 characters of English ≈ 1 token. SQL and code tokenise <i>worse</i> (brackets, underscores, long identifiers like <code>stg_policy_premium_txn</code> split into several tokens).</td></tr>
+<tr><td><b>Input tokens</b></td><td>Everything sent to the model: your prompt + chat history + attached files + whatever Copilot pulls in automatically (active editor, selection, workspace search results).</td></tr>
+<tr><td><b>Output tokens</b></td><td>What the model writes back. Usually priced higher than input. "Rewrite the whole file" = lots of output tokens.</td></tr>
+<tr><td><b>Cached tokens</b></td><td>Repeated context the provider can reuse cheaply. Long chat threads keep resending history — cheaper when cached, but still not free.</td></tr>
+<tr><td><b>Context window</b></td><td>The maximum the model can "see" at once. Hitting it means older history or parts of files are dropped or summarised — answers start ignoring earlier instructions.</td></tr>
+</table>
+
+<h3>6.3 The three ways to give Copilot context (VS Code)</h3>
+<table>
+<tr><th>Mode</th><th>How</th><th>What actually gets sent</th></tr>
+<tr><td><b>A · Whole file (unscoped)</b></td><td>Open the 500+ line file, put the cursor anywhere, ask in Chat with nothing selected.</td><td>Copilot decides which parts of the active file (and possibly other open tabs) to include. You don't control it.</td></tr>
+<tr><td><b>B · Selection-scoped</b></td><td>Highlight only the relevant 30–60 lines, then ask (or use <code>#selection</code>).</td><td>Your selection, plus a bit of surrounding context.</td></tr>
+<tr><td><b>C · Reference-scoped</b></td><td>New chat, no editor focus. Type <code>#file:</code> and pick a small file, or <code>#sym</code>/<code>#selection</code>.</td><td>Exactly the files/symbols you reference — the most predictable.</td></tr>
+</table>
+<div class="call warn"><b class="t">Gotcha — "@file" vs "#file"</b>
+In VS Code Copilot Chat, <code>@</code> picks a <b>participant</b> (<code>@workspace</code>, <code>@terminal</code>, <code>@vscode</code>) and <code>#</code> attaches <b>context</b> (<code>#file</code>, <code>#selection</code>, <code>#codebase</code>). Learners often type <code>@file</code> — it does nothing useful. The lab's "@file-scoped" run means <code>#file:</code>. You can also drag a file into the chat box or use the paperclip <b>Add Context</b> button.</div>
+<div class="call warn"><b class="t">Gotcha — <code>@workspace</code> / <code>#codebase</code> are the expensive ones</b>
+They search the whole repo and stuff matches into the prompt. Great for "where is X used?", wasteful for "explain this function".</div>
+
+<h3>6.4 Lab — same question, three contexts (20 min)</h3>
+<p><b>Use the same question every time.</b> Pick one with a checkable right answer. Suggested for an insurance stored procedure:</p>
+<div class="cb"><span class="lbl">PROMPT — use word-for-word in all 3 runs</span><button>Copy</button><pre>In the procedure that loads policy premium data, explain exactly how the
+procedure decides between a FULL load and an INCREMENTAL load.
+List: (1) the parameter or variable that controls it, (2) its default value,
+(3) the line(s) where the target table is truncated or deleted,
+(4) what happens if the source returns zero rows.
+Answer in a numbered list. Do not rewrite the code.</pre></div>
+
+<ol class="steps">
+<li><b>Prepare.</b> Open your 500+ line file. Close every other editor tab (<span class="kbd">Ctrl</span>+<span class="kbd">K</span> <span class="kbd">W</span>). Note the model selected in the chat model picker — keep it the same for all three runs.</li>
+<li><b>Count the tokens first</b> so you can compare numbers, not feelings. Run the estimator below on the whole file and on the 40-line excerpt (save the excerpt as <code>excerpt.sql</code>).</li>
+<li><b>Run A — whole file.</b> New chat (<span class="kbd">Ctrl</span>+<span class="kbd">L</span> / the <b>+</b> button). Cursor in the file, nothing selected. Paste the prompt. Expand <b>"Used n references"</b> under the answer and note what was attached.</li>
+<li><b>Run B — selection.</b> New chat. Select only the load-decision block (~30–60 lines). Paste the same prompt.</li>
+<li><b>Run C — #file.</b> Save the excerpt as its own small file. New chat, click outside the editor, type <code>#file:excerpt.sql</code> then the prompt.</li>
+<li><b>Score each answer</b> against the code yourself (you know the right answer — that is the point). Fill in the table.</li>
+</ol>
+
+<div class="cb"><span class="lbl">PYTHON — token estimator (pip install tiktoken)</span><button>Copy</button><pre># count_tokens.py  — rough estimate; Copilot models use their own tokenisers,
+# but o200k_base is close enough to compare A vs B vs C.
+import sys, tiktoken
+enc = tiktoken.get_encoding("o200k_base")
+for path in sys.argv[1:]:
+    text = open(path, encoding="utf-8", errors="ignore").read()
+    n = len(enc.encode(text))
+    print(f"{path:40s} lines={text.count(chr(10))+1:5d}  chars={len(text):7d}  tokens≈{n}")
+
+# usage:
+#   python count_tokens.py usp_Load_PolicyPremium.sql excerpt.sql</pre></div>
+
+<h4>Record your results</h4>
+<div class="cb"><span class="lbl">TEMPLATE — Module 6 deliverable</span><button>Copy</button><pre>MODULE 6 — Same question, three contexts
+File: ______________________   Lines: ____   Model: ______________
+
+| Run | Context given        | Est. input tokens | References shown | Correct items (of 4) | Hallucinated anything? | Time to answer |
+|-----|----------------------|-------------------|------------------|----------------------|------------------------|----------------|
+| A   | Whole 500+ line file |                   |                  |                      |                        |                |
+| B   | Selected lines only  |                   |                  |                      |                        |                |
+| C   | #file:excerpt.sql    |                   |                  |                      |                        |                |
+
+The difference I observed (2–3 sentences):
+_____________________________________________________________________
+
+My rule from now on:
+_____________________________________________________________________</pre></div>
+
+<div class="call ok"><b class="t">✅ Success check</b>
+You have three filled rows with a token estimate for each, and you can say in one sentence which run was most accurate per token. Typical result: B or C answers as well or better than A at a fraction of the input — and A sometimes "finds" a default value from a different block of the file.</div>
+<div class="call info"><b class="t">Effective token habits (put these on the board)</b>
+<ul>
+<li>Select or <code>#file</code> the smallest block that contains the answer.</li>
+<li>Start a <b>new chat per task</b> — long threads resend history every turn.</li>
+<li>Ask for a <b>diff or the changed lines only</b>, not "rewrite the whole proc".</li>
+<li>Use a cheaper/faster model for explain/rename/format; save premium models for design and tricky bugs.</li>
+<li>Put stable rules (naming, SQL dialect, "never TRUNCATE prod tables") in <code>.github/copilot-instructions.md</code> instead of retyping them.</li>
+</ul></div>
+</section>
+
+<!-- ============ MODULE 7 ============ -->
+<section class="mod" id="m7">
+<h2 class="mt"><span class="num">7</span>Usage &amp; Token Tracking (Org Level)</h2>
+<div class="meta">0:30 – 0:45 · 15 min · fast, admin-dependent — have the request template ready</div>
+
+<h3>7.1 Two different reports — don't mix them up</h3>
+<table>
+<tr><th></th><th>Copilot usage metrics</th><th>Billing / AI Credits usage report</th></tr>
+<tr><td><b>Answers</b></td><td>Who is using Copilot, which features, IDEs, languages, models, lines generated/accepted</td><td>How much it cost — credits consumed per user, per model</td></tr>
+<tr><td><b>Where (UI)</b></td><td>Org: <span class="path">Organization → Insights → Copilot usage</span><br>Enterprise: <span class="path">Enterprise → AI Controls → Copilot → Metrics → Copilot usage metrics</span>, then Insights → Copilot usage / Code generation</td><td><span class="path">Settings → Billing &amp; Licensing → Usage → Get usage report</span> → choose report + time frame → <b>Email me the report</b> (CSV arrives by email)</td></tr>
+<tr><td><b>API</b></td><td>Copilot usage metrics REST API (NDJSON reports)</td><td>Billing usage REST API</td></tr>
+<tr><td><b>Who can see</b></td><td>Org owners, enterprise owners/billing managers, or a custom role with "View Copilot Metrics"</td><td>Org admins / billing managers. Members cannot download it for themselves.</td></tr>
+</table>
+<div class="call warn"><b class="t">Gotchas</b>
+<ul>
+<li>The old Copilot metrics API was <b>shut down on 2 April 2026</b>. Scripts and dashboards copied from 2024–25 blogs return 404/410. Use the new <code>/copilot/metrics/reports/…</code> endpoints below.</li>
+<li>The metrics API only works if the <b>"Copilot usage metrics" policy</b> is enabled for the enterprise.</li>
+<li>Reports are <b>daily</b> and the "latest" report is <b>28 days</b> — there is no built-in "weekly" button. Weekly = loop 7 daily reports, or filter the 28-day file to the last 7 days.</li>
+<li>Responses are <b>signed download links</b> that expire quickly — download immediately.</li>
+</ul></div>
+
+<h3>7.2 Path 1 — Dashboard (if you have access)</h3>
+<ol class="steps">
+<li>Go to <span class="path">github.com/orgs/&lt;ORG&gt;</span> → <b>Insights</b> tab → <b>Copilot usage</b> (enterprise users: use the AI Controls path above).</li>
+<li>Set the range to the last 7 days. Screenshot: active users, feature breakdown (completions / chat / agent / code review), model breakdown.</li>
+<li>Open the <b>Code generation</b> view and note lines suggested vs accepted.</li>
+</ol>
+
+<h3>7.3 Path 2 — API with GitHub CLI</h3>
+<p>Classic PAT needs <code>read:org</code> for org reports; fine-grained PAT needs <b>Organization Copilot metrics → Read</b>.</p>
+<div class="cb"><span class="lbl">BASH — last 7 daily org reports</span><button>Copy</button><pre>ORG="your-org"
+mkdir -p copilot_week && cd copilot_week
+for i in 1 2 3 4 5 6 7; do
+  DAY=$(date -u -d "-$i day" +%F)          # macOS: date -u -v-${i}d +%F
+  echo "== $DAY"
+  gh api -H "X-GitHub-Api-Version: 2026-03-10" \
+    "/orgs/$ORG/copilot/metrics/reports/organization-1-day?day=$DAY" \
+    --jq '.download_links[]' | while read URL; do
+      curl -sL "$URL" >> "org_$DAY.ndjson"
+    done
+done
+ls -lh</pre></div>
+<div class="cb"><span class="lbl">BASH — per-user 28-day report (for finding idle seats)</span><button>Copy</button><pre>gh api -H "X-GitHub-Api-Version: 2026-03-10" \
+  "/orgs/$ORG/copilot/metrics/reports/users-28-day/latest" \
+  --jq '.download_links[]' | xargs -n1 curl -sL > users_28d.ndjson
+
+# Inspect the field names FIRST — don't guess them:
+head -n 1 users_28d.ndjson | jq 'keys'</pre></div>
+<div class="call info"><b class="t">Honest caveat</b>
+Field names inside the NDJSON have changed between API versions. Always run <code>jq 'keys'</code> on one line before writing filters, and pin <code>X-GitHub-Api-Version</code> in scripts so a version bump doesn't silently break them.</div>
+
+<h3>7.4 Path 3 — No access? Request it (most learners)</h3>
+<div class="cb"><span class="lbl">MESSAGE — to your GitHub org admin</span><button>Copy</button><pre>Hi <Admin>,
+
+For our Copilot enablement training I need last week's Copilot usage for
+our team (dates: <start> to <end>). Could you share either:
+
+  1. A screenshot/export of Insights → Copilot usage (feature + model
+     breakdown) filtered to our team, or
+  2. The Copilot AI Credits usage report CSV
+     (Billing & Licensing → Usage → Get usage report) filtered to our users.
+
+Alternatively, a custom org role with "View Copilot Metrics" for me would
+let me pull it myself. Only aggregate/team data is needed.
+
+Thanks!</pre></div>
+
+<h3>7.5 Find one under-use or misuse</h3>
+<table>
+<tr><th>Pattern</th><th>What it looks like in the data</th><th>Action</th></tr>
+<tr><td><b>Idle seat</b> (under-use)</td><td>Licensed user with 0 active days in 28</td><td>Reclaim or onboard</td></tr>
+<tr><td><b>Completions only</b> (under-use)</td><td>User never uses Chat/agent/code review</td><td>Pair session on chat + <code>#file</code> scoping</td></tr>
+<tr><td><b>Premium model for trivia</b> (misuse)</td><td>Top model by credits is a high-rate model, used for short explain/format prompts</td><td>Model guidance in team README</td></tr>
+<tr><td><b>Credit spike</b> (misuse)</td><td>One user / one day burns a large share of credits — usually agent loops or <code>@workspace</code> on a huge repo</td><td>User-level budget; agent session review</td></tr>
+<tr><td><b>Low acceptance</b></td><td>Many suggestions, very few accepted in a language (e.g., SQL)</td><td>Add custom instructions / dialect hints</td></tr>
+</table>
+<div class="cb"><span class="lbl">TEMPLATE — Module 7 deliverable</span><button>Copy</button><pre>MODULE 7 — Weekly Copilot usage
+Source used:  [ ] Dashboard   [ ] API   [ ] Requested from admin (date sent: ____)
+Period: ______ to ______     Users in scope: ____
+
+Headline numbers: active users ___ / licensed ___ ; top feature ______ ; top model ______
+
+Finding (pick ONE):  [ ] under-use   [ ] misuse
+What I saw: ___________________________________________________________
+Evidence (metric + value): ____________________________________________
+Proposed action + owner: ______________________________________________</pre></div>
+<div class="call ok"><b class="t">✅ Success check</b> You either have the data on screen or a sent request with a timestamp, and one finding written with a number attached.</div>
+</section>
+
+<!-- ============ MODULE 8 ============ -->
+<section class="mod" id="m8">
+<h2 class="mt"><span class="num">8</span>Fabric Workspace Connection — Git Round Trip</h2>
+<div class="meta">0:45 – 1:30 · 45 min · work in pairs: one person in Fabric, one in VS Code/GitHub, then swap</div>
+
+<h3>8.1 Mental model</h3>
+<p>A Fabric workspace connected to Git is a <b>two-way mirror of item definitions</b> (notebooks, pipelines, semantic models, reports, lakehouse/warehouse <i>metadata</i>). It is <b>not</b> a backup of data — lakehouse files and table rows never go into Git.</p>
+<table>
+<tr><th>Direction</th><th>Fabric button</th><th>Git equivalent</th></tr>
+<tr><td>Workspace → Git</td><td>Source control → <b>Changes</b> → Commit</td><td>commit + push</td></tr>
+<tr><td>Git → Workspace</td><td>Source control → <b>Updates</b> → Update all</td><td>pull</td></tr>
+</table>
+
+<h3>8.2 Prerequisites</h3>
+<ul class="check">
+<li>Workspace on a <b>Fabric capacity</b> (Git integration is not available on Pro-only workspaces).</li>
+<li>Tenant switches enabled in the Admin portal (Git integration; GitHub integration if using GitHub) — or delegated to capacity/workspace admins.</li>
+<li>You are <b>Admin</b> of the workspace to connect (only Admins can connect, sync settings, or disconnect).</li>
+<li>A repo in <b>GitHub</b> or <b>Azure DevOps</b> where you have write access. An empty repo or an empty folder is easiest.</li>
+<li>GitHub: a fine-grained PAT scoped to the repo with <b>Contents: Read and write</b> (or use the GitHub account connection offered in Fabric).</li>
+</ul>
+
+<h3>8.3 Connect (Admin, ~8 min)</h3>
+<ol class="steps">
+<li>Open the workspace → <b>Workspace settings</b> → <b>Git integration</b>.</li>
+<li>Choose provider: <b>GitHub</b> or <b>Azure DevOps</b>.</li>
+<li>GitHub: <b>Add account</b> → Display name <code>gh-&lt;yourname&gt;</code>, paste PAT, repository URL <code>https://github.com/&lt;org&gt;/&lt;repo&gt;</code> → Add.<br>Azure DevOps: sign in with your Entra ID account → pick Organization, Project, Repository.</li>
+<li>Branch: <code>main</code> (or create <code>dev-&lt;yourname&gt;</code> for the lab — recommended).</li>
+<li>Git folder: <code>fabric/</code> (keeps the repo root clean). Click <b>Connect and sync</b>.</li>
+<li>If both sides have content Fabric asks which way to sync first. <b>Read the dialog</b> — choosing the wrong direction overwrites the other side.</li>
+</ol>
+<div class="call ok"><b class="t">✅ Check</b> The workspace header shows the branch name and a <b>Source control</b> button; every item shows a Git status of <b>Synced</b>. In the repo you see a folder per item, e.g. <code>fabric/NB_PolicyLoad.Notebook/</code> containing <code>.platform</code> and <code>notebook-content.py</code>.</div>
+
+<h3>8.4 The round trip (~25 min)</h3>
+<h4>Step 1 — PULL (Git → Fabric baseline)</h4>
+<ol class="steps">
+<li>Click <b>Source control</b>. On the <b>Updates</b> tab, if anything is listed click <b>Update all</b>. Note the commit ID shown at the bottom of the panel.</li>
+</ol>
+<h4>Step 2 — CHANGE in Fabric</h4>
+<ol class="steps">
+<li>Open notebook <code>NB_PolicyLoad</code> (create it if empty). Add a cell:</li>
+</ol>
+<div class="cb"><span class="lbl">PYSPARK — cell to add</span><button>Copy</button><pre># Round-trip marker — changed in Fabric
+LOAD_TYPE = "INCREMENTAL"   # never default to FULL (see Module 11)
+print(f"Round trip test, load type = {LOAD_TYPE}")</pre></div>
+<h4>Step 3 — PUSH (Fabric → Git)</h4>
+<ol class="steps">
+<li>Source control → <b>Changes</b> tab → item shows <b>Modified</b> → tick it → commit message <code>M8: add load-type marker (Fabric side)</code> → <b>Commit</b>.</li>
+<li>Partner opens the repo on GitHub/ADO and confirms the commit and the diff in <code>notebook-content.py</code>.</li>
+</ol>
+<h4>Step 4 — CHANGE in Git (outside Fabric)</h4>
+<div class="cb"><span class="lbl">BASH — partner edits in VS Code</span><button>Copy</button><pre>git clone https://github.com/<org>/<repo>.git && cd <repo>
+git checkout dev-<yourname>
+code fabric/NB_PolicyLoad.Notebook/notebook-content.py
+#   change the print line to:  print(f"Round trip OK (edited in Git), load type = {LOAD_TYPE}")
+git add . && git commit -m "M8: edit notebook from VS Code (Git side)"
+git push</pre></div>
+<h4>Step 5 — SYNC BACK (Git → Fabric)</h4>
+<ol class="steps">
+<li>Back in Fabric, Source control → <b>Updates</b> → the notebook shows an incoming change → <b>Update all</b>.</li>
+<li>Open the notebook — the edited print line is there. Run the cell.</li>
+</ol>
+<div class="call ok"><b class="t">✅ Success check</b> Two commits in history (one from Fabric, one from VS Code), the notebook in Fabric shows the Git-side edit, and the item status is <b>Synced</b>.</div>
+
+<h3>8.5 Things that commonly break (pick the one that happened to you)</h3>
+<table>
+<tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
+<tr><td>"Update all" is greyed out / blocked</td><td>You have <b>uncommitted changes</b> in the workspace on the same item</td><td>Commit or <b>Undo</b> them first; or resolve the conflict when prompted</td></tr>
+<tr><td>Conflict dialog appears</td><td>Same item changed in Fabric and Git</td><td>Choose workspace or Git version, or branch out and merge in Git</td></tr>
+<tr><td>Commit fails</td><td>Branch protection on <code>main</code> requires PRs</td><td>Work on a feature branch; merge via PR</td></tr>
+<tr><td>Item missing from Changes list</td><td>Item type not supported by Git integration (yet)</td><td>Check the supported-items list; recreate manually per environment</td></tr>
+<tr><td>Notebook runs but "table not found" after sync to another workspace</td><td>Default lakehouse binding / data isn't in Git</td><td>Re-attach lakehouse; use deployment rules or parameters</td></tr>
+<tr><td>Item appears twice / rename lost</td><td>Folder renamed in Git but <code>.platform</code> <code>logicalId</code> clash</td><td>Rename inside Fabric, not by renaming folders in Git</td></tr>
+<tr><td>Pipeline connection broken after sync</td><td>Connections/credentials are not stored in Git</td><td>Recreate connection; reference by parameter</td></tr>
+<tr><td>Contributor can't switch branch</td><td>Branch switching is Admin-only by default</td><td>Admin enables "Allow users with at least Contributor role to change Git branch"</td></tr>
+</table>
+<div class="cb"><span class="lbl">TEMPLATE — Module 8 deliverable</span><button>Copy</button><pre>MODULE 8 — Fabric Git round trip
+Workspace: __________  Provider: [ ] GitHub [ ] Azure DevOps  Repo/branch: __________  Folder: ______
+
+| # | Step                     | Done | Commit ID / evidence | Time |
+|---|--------------------------|------|----------------------|------|
+| 1 | Pull (Update all)        |      |                      |      |
+| 2 | Change in Fabric         |      |                      |      |
+| 3 | Push (Commit from Fabric)|      |                      |      |
+| 4 | Change in Git (VS Code)  |      |                      |      |
+| 5 | Sync back (Update all)   |      |                      |      |
+
+One thing that broke:
+  Symptom: ______________________________________________
+  Cause:   ______________________________________________
+  Fix:     ______________________________________________
+  Prevent next time: ____________________________________</pre></div>
+<div class="call trainer"><b class="t">Trainer tip</b> If nothing breaks for a pair, make it break: have both partners edit the same notebook cell at once, then try "Update all". The conflict is the lesson.</div>
+</section>
+
+<!-- ============ MODULE 9 ============ -->
+<section class="mod" id="m9">
+<h2 class="mt"><span class="num">9</span>Authentication &amp; Permissions Mechanics</h2>
+<div class="meta">1:30 – 1:50 · 20 min</div>
+
+<h3>9.1 The key idea: two permission systems must both say yes</h3>
+<p>What a person can do = <b>Fabric workspace role</b> ∩ <b>Git provider permission</b>. Being a workspace Admin doesn't let you push to a protected branch; being a repo maintainer doesn't let you commit from Fabric if you're only a Viewer.</p>
+<table>
+<tr><th>Operation</th><th>Fabric role needed</th></tr>
+<tr><td>Connect / disconnect workspace to Git, change sync settings</td><td>Admin</td></tr>
+<tr><td>Switch branch / create branch from Fabric</td><td>Admin (or Member/Contributor with write on all items, <i>if</i> the workspace setting "Allow users with at least Contributor role to change Git branch" is ON)</td></tr>
+<tr><td>Commit and update</td><td>Contributor+ with write permission on the items, plus write access in Git</td></tr>
+<tr><td>View Git status &amp; connection details</td><td>Admin, Member, Contributor</td></tr>
+<tr><td>Branch out to another workspace</td><td>Admin, Member, Contributor</td></tr>
+<tr><td>Viewer</td><td>Cannot use Git integration</td></tr>
+</table>
+<div class="call warn"><b class="t">Upcoming change — tell learners</b>
+Microsoft's docs state that from <b>1 December 2026</b>, users without read-write permission on workspace items can't use Git integration. Audit any "read-only but commits sometimes" users now.</div>
+
+<h3>9.2 Onboarding checklist (the deliverable — customise it)</h3>
+<div class="cb"><span class="lbl">CHECKLIST — onboarding a member to Git-integrated Fabric</span><button>Copy</button><pre>NEW MEMBER: ______________   Role on team: ______________   Requested by: ______   Date: ______
+
+A. IDENTITY
+[ ] Entra ID account active, MFA registered
+[ ] Added to the right Entra security group (e.g., sg-fabric-claims-dev) — grant via GROUP, not by name
+[ ] Fabric licence / capacity access confirmed (workspace is on F-SKU or trial capacity)
+
+B. FABRIC WORKSPACE
+[ ] Workspace role assigned:  [ ] Viewer  [ ] Contributor  [ ] Member  [ ] Admin  (least privilege; justify Admin)
+[ ] Contributor+ if they must commit/update (Viewer cannot use Git integration)
+[ ] Item-level write permission on items they'll edit (needed for Git ops; see 1 Dec 2026 change)
+[ ] Branch switching: is "Allow Contributor to change Git branch" ON? If not, they know to ask an Admin
+[ ] Lakehouse / Warehouse data access (SQL permissions, OneLake data access roles) — separate from workspace role
+[ ] Connections & gateways they'll use are shared with them (connections are NOT in Git)
+
+C. GIT PROVIDER
+GitHub:
+[ ] Member of the GitHub org; added to team with WRITE on the repo
+[ ] Personal account/PAT configured in Fabric (fine-grained, repo-scoped, Contents: Read & write, expiry ≤ 90 days)
+Azure DevOps:
+[ ] Added to project; repo permission "Contribute" (and "Create branch" if needed)
+[ ] Same tenant as Fabric (cross-tenant ADO is a common blocker)
+Both:
+[ ] Branch protection explained: no direct commits to main; feature branch → PR → review
+[ ] Copilot seat assigned (if they will use Copilot in VS Code against this repo)
+
+D. VERIFY (do it with them, 5 min)
+[ ] They open Source control in the workspace and see the branch name
+[ ] They make a trivial change on a feature branch, commit from Fabric, see it in the repo
+[ ] They do "Update all" after a Git-side change
+
+E. OFFBOARDING MIRROR (same list, reverse order)
+[ ] Remove from groups → revoke PAT/account connection in Fabric → remove repo access → reassign owned items/connections</pre></div>
+<div class="call ok"><b class="t">✅ Success check</b> Every line in your checklist names <b>where</b> it's granted (Entra, Fabric, GitHub/ADO) and section D was actually tested with a colleague or the trainer.</div>
+<div class="call bad"><b class="t">Common mistakes</b>
+<ul><li>Giving <b>Admin</b> "so Git works" — Contributor is enough to commit; Admin can disconnect the repo.</li>
+<li>Sharing one team PAT — every commit shows the same author and nobody can be revoked individually.</li>
+<li>Forgetting data permissions — they can commit the notebook but it fails on run.</li></ul></div>
+</section>
+
+<!-- ============ MODULE 10 ============ -->
+<section class="mod" id="m10">
+<h2 class="mt"><span class="num">10</span>When NOT to Use AI (Unsupervised)</h2>
+<div class="meta">1:50 – 2:10 · 20 min · 5 min framing + 10 min individual + 5 min share</div>
+
+<h3>10.1 The test — use AI unsupervised only if ALL four are "yes"</h3>
+<table>
+<tr><th>Question</th><th>If "no" →</th></tr>
+<tr><td>1. Can I <b>verify</b> the output faster than I could write it?</td><td>You'll trust it blindly. Supervise or don't use.</td></tr>
+<tr><td>2. Is the action <b>reversible</b> (no TRUNCATE/DELETE/DROP on real data, no external send)?</td><td>Human runs it, after review.</td></tr>
+<tr><td>3. Is the input <b>free of PII/PHI and confidential</b> data?</td><td>Mask first, or don't paste.</td></tr>
+<tr><td>4. Is the <b>business rule</b> written down somewhere the AI can see?</td><td>It will invent one that sounds right.</td></tr>
+</table>
+
+<h3>10.2 Example situations in insurance data work</h3>
+<table>
+<tr><th>Situation</th><th>Why not unsupervised</th><th>Risk</th></tr>
+<tr><td>Agent mode "fix the failing load" on a pipeline pointed at <b>prod</b></td><td>Agent can edit and run; it optimises for "green", not for "correct"</td><td>Truncated or duplicated policy/claims data; reprocessing cost</td></tr>
+<tr><td>Pasting a <b>claims extract</b> with names, policy numbers, medical notes into chat to "find the bad rows"</td><td>Confidential/PHI leaves the governed boundary</td><td>Privacy breach, regulatory reporting</td></tr>
+<tr><td>Generating <b>reserve / premium / commission</b> calculations from a vague description</td><td>Rules are actuarial/contractual; AI fills gaps with plausible maths</td><td>Wrong financial figures in regulatory or partner reports</td></tr>
+<tr><td>Changing <b>FULL vs INCREMENTAL</b> load logic or watermark handling</td><td>Edge cases (late-arriving data, equal timestamps, empty source) are exactly what AI misses</td><td>Silent data loss — the Everguard-class bug</td></tr>
+<tr><td>Writing <b>RLS / permission</b> rules or workspace role changes</td><td>Security is a deny-by-default domain; AI defaults to "make it work"</td><td>Over-exposure of customer data</td></tr>
+<tr><td>2 a.m. <b>hotfix</b> where nobody reviews the AI's patch</td><td>Fatigue + urgency = rubber-stamping</td><td>A second incident caused by the fix</td></tr>
+</table>
+
+<div class="cb"><span class="lbl">TEMPLATE — Module 10 deliverable (use REAL situations from last month)</span><button>Copy</button><pre>MODULE 10 — Three situations where AI should NOT be used unsupervised
+
+| # | Date / ticket | What I (or the team) was doing | Which of the 4 tests failed | What could have gone wrong (risk) | Severity H/M/L | Safe way instead |
+|---|---------------|--------------------------------|-----------------------------|-----------------------------------|----------------|------------------|
+| 1 |               |                                |                             |                                   |                |                  |
+| 2 |               |                                |                             |                                   |                |                  |
+| 3 |               |                                |                             |                                   |                |                  |
+
+"Supervised" for my team means: ________________________________________</pre></div>
+<div class="call ok"><b class="t">✅ Success check</b> Each row is a real event with a date or ticket, names a failed test, and the risk is concrete ("12k policy rows deleted in DEV"), not generic ("could be bad").</div>
+<div class="call warn"><b class="t">Facilitation note</b> This is not an anti-AI module. For balance, ask each learner to also name one task from last month where AI was clearly <i>safe and faster</i> (docstrings, test data generation, regex, explaining legacy SQL).</div>
+</section>
+
+<!-- ============ MODULE 11 ============ -->
+<section class="mod" id="m11">
+<h2 class="mt"><span class="num">11</span>Do's and Don'ts for AI in Data Work</h2>
+<div class="meta">2:10 – 2:35 · 25 min · build a one-page card anchored on a real past bug</div>
+
+<h3>11.1 How to build the card (10 min)</h3>
+<ol class="steps">
+<li>Write the bug in <b>3 lines</b>: what happened, why, what it cost. (Use the Everguard FULL-load issue, or your own.)</li>
+<li>Ask: <i>"Which single rule, if followed, would have prevented this?"</i> — that becomes your <b>#1 Don't</b>.</li>
+<li>Fill the rest of the card with rules that are <b>specific and checkable</b> ("never default <code>@LoadType</code> to FULL") rather than slogans ("be careful").</li>
+<li>Keep it to <b>one printed page</b>. Pin it in the repo as <code>docs/AI-DATA-CARD.md</code> and copy the top rules into <code>.github/copilot-instructions.md</code> so Copilot sees them too.</li>
+</ol>
+
+<h3>11.2 Sample card (edit the bug box with your real details)</h3>
+<div id="card-print-wrap">
+<div class="printcard">
+<h3>AI in Insurance Data Work — Do / Don't</h3>
+<div class="grid2">
+  <div class="card do"><h4>✔ DO</h4>
+  <ul>
+    <li>Scope prompts to the block you're changing (<code>#file</code>, selection).</li>
+    <li>Give the AI the <b>business rule in writing</b> (load type, SCD type, grain, keys).</li>
+    <li>Ask for a <b>diff</b> and read every changed line.</li>
+    <li>Run AI code first on a <b>DEV copy</b> with a row-count before/after.</li>
+    <li>Make load procs <b>idempotent</b> — running twice gives the same result.</li>
+    <li>Test the <b>empty source</b>, <b>NULL keys</b>, <b>duplicate keys</b>, <b>equal-timestamp</b> cases.</li>
+    <li>Mask policy numbers, names, DOB, claim notes before pasting samples.</li>
+    <li>Record the prompt + model in the PR description.</li>
+  </ul></div>
+  <div class="card dont"><h4>✘ DON'T</h4>
+  <ul>
+    <li><b>Don't let a load default to FULL.</b> FULL must be explicit, logged and guarded.</li>
+    <li>Don't accept any <code>TRUNCATE</code>/<code>DELETE</code> without a guard (source row count &gt; 0, environment check).</li>
+    <li>Don't run agent mode against prod connections.</li>
+    <li>Don't paste raw claims/policy data or connection strings into chat.</li>
+    <li>Don't let AI invent premium, reserve or commission formulas.</li>
+    <li>Don't merge AI SQL that you haven't executed against test data.</li>
+    <li>Don't "fix" a failing test by changing the test.</li>
+  </ul></div>
+</div>
+<div class="bug"><b>Why this card exists — Everguard FULL-load issue</b> <i>(replace with the actual incident details)</i><br>
+<b>What happened:</b> the Everguard policy load ran as a FULL load when an incremental was expected — the target was cleared and reloaded. <br>
+<b>Root cause:</b> load-type parameter defaulted to FULL / was not passed by the caller; no guard on the delete step. <br>
+<b>Impact:</b> ____ rows affected, ____ hours to recover, downstream reports wrong for ____. <br>
+<b>Rule it created:</b> FULL loads require an explicit parameter + a source-row-count guard + a log entry.</div>
+</div>
+</div>
+<div class="btnrow"><button class="btn" onclick="printCard()">🖨 Print just the card</button></div>
+<div class="call info"><b class="t">Honest caveat</b> I don't have the actual Everguard incident details — the bug box is a structured placeholder based on the description "FULL-load issue". Learners should fill in the real cause and impact; a card based on a guessed bug teaches the wrong rule.</div>
+
+<div class="cb"><span class="lbl">MARKDOWN — paste top rules into .github/copilot-instructions.md</span><button>Copy</button><pre>## Data load rules (insurance warehouse)
+- Load procedures take an explicit @LoadType parameter with NO default. Valid values: 'FULL', 'INCREMENTAL'.
+- Never generate TRUNCATE or unfiltered DELETE without a preceding guard that the source has > 0 rows.
+- Incremental filters use the stored watermark with >= and de-duplicate on the business key, not >.
+- All procs must be idempotent and wrapped in BEGIN TRY / BEGIN TRAN ... COMMIT / CATCH ROLLBACK.
+- Do not invent premium, reserve, or commission formulas; ask for the rule if it is not in the prompt.
+- Never include sample data containing names, policy numbers, DOB or claim notes.</pre></div>
+<div class="call ok"><b class="t">✅ Success check</b> Card fits on one page, the #1 Don't directly prevents your real bug, and every rule could be checked in a code review with a yes/no.</div>
+</section>
+
+<!-- ============ MODULE 12 ============ -->
+<section class="mod" id="m12">
+<h2 class="mt"><span class="num">12</span>Validating AI-Generated Code</h2>
+<div class="meta">2:35 – 3:00 · 25 min · build a checklist, run it, record pass/fail</div>
+
+<h3>12.1 The validation ladder</h3>
+<table>
+<tr><th>Level</th><th>Question</th><th>How</th></tr>
+<tr><td>1 · Compiles</td><td>Does it even create?</td><td>Run <code>CREATE OR ALTER</code> in DEV</td></tr>
+<tr><td>2 · Reads right</td><td>Does it match the business rule line by line?</td><td>Human review against the written rule</td></tr>
+<tr><td>3 · Happy path</td><td>Correct rows on normal data?</td><td>Seeded test data + expected counts</td></tr>
+<tr><td>4 · Edge cases</td><td>Empty source, NULLs, duplicates, boundaries, re-run</td><td>Scripted tests (below)</td></tr>
+<tr><td>5 · Failure</td><td>Does it roll back cleanly on error?</td><td>Force an error mid-proc</td></tr>
+<tr><td>6 · Operability</td><td>Logged, parameterised, performant?</td><td>Check log table, plan, duration</td></tr>
+</table>
+
+<h3>12.2 The AI-generated proc under test</h3>
+<p>This is what Copilot produced for: <i>"Write a stored procedure that loads policy premiums from staging into the fact table, supporting full and incremental loads."</i> It looks fine. It has two real bugs.</p>
+<div class="cb"><span class="lbl">T-SQL — AI-generated (as received)</span><button>Copy</button><pre>CREATE OR ALTER PROCEDURE dbo.usp_Load_PolicyPremium
+    @LoadType VARCHAR(20) = 'FULL'               -- ⚠ bug 1: defaults to FULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @Watermark DATETIME2 =
+        (SELECT ISNULL(MAX(LastLoadedAt),'1900-01-01') FROM dbo.LoadWatermark WHERE TableName = 'FactPolicyPremium');
+
+    IF @LoadType = 'FULL'
+    BEGIN
+        DELETE FROM dbo.FactPolicyPremium;        -- ⚠ no guard: wipes target even if staging is empty
+        INSERT INTO dbo.FactPolicyPremium (PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt)
+        SELECT PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt FROM stg.PolicyPremium;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO dbo.FactPolicyPremium (PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt)
+        SELECT PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt
+        FROM stg.PolicyPremium
+        WHERE UpdatedAt > @Watermark;            -- ⚠ bug 2: rows with UpdatedAt = watermark are skipped;
+                                                  --          updated policies are inserted again (duplicates)
+    END
+
+    UPDATE dbo.LoadWatermark SET LastLoadedAt = (SELECT MAX(UpdatedAt) FROM stg.PolicyPremium)
+    WHERE TableName = 'FactPolicyPremium';       -- ⚠ sets NULL if staging empty; no transaction
+END</pre></div>
+<div class="call info"><b class="t">Platform note</b> Written in plain T-SQL that runs on SQL Server, Azure SQL and Fabric Warehouse. Fabric Warehouse has some T-SQL surface differences (e.g., certain constraints and features are limited) — if a statement fails there, that is itself a finding to record.</div>
+
+<h3>12.3 Test harness (run in a DEV database / warehouse)</h3>
+<div class="cb"><span class="lbl">T-SQL — setup</span><button>Copy</button><pre>-- one-time setup in DEV
+CREATE SCHEMA stg;   -- skip if exists
+GO
+CREATE TABLE stg.PolicyPremium     (PolicyNo VARCHAR(20), PremiumAmt DECIMAL(12,2), EffectiveDate DATE, UpdatedAt DATETIME2(0));
+CREATE TABLE dbo.FactPolicyPremium (PolicyNo VARCHAR(20), PremiumAmt DECIMAL(12,2), EffectiveDate DATE, UpdatedAt DATETIME2(0));
+CREATE TABLE dbo.LoadWatermark     (TableName VARCHAR(100), LastLoadedAt DATETIME2(0));
+CREATE TABLE dbo.TestResults       (RunAt DATETIME2(0), TestId VARCHAR(10), TestName VARCHAR(200), Expected VARCHAR(50), Actual VARCHAR(50), Result VARCHAR(4));
+INSERT INTO dbo.LoadWatermark VALUES ('FactPolicyPremium', NULL);</pre></div>
+
+<div class="cb"><span class="lbl">T-SQL — tests (run block by block, results land in dbo.TestResults)</span><button>Copy</button><pre>-- helper pattern: reset → seed → run → assert
+------------------------------------------------------------
+-- T1 Happy path: incremental loads 3 new rows
+DELETE FROM stg.PolicyPremium; DELETE FROM dbo.FactPolicyPremium;
+UPDATE dbo.LoadWatermark SET LastLoadedAt='2026-10-01 00:00:00';
+INSERT INTO stg.PolicyPremium VALUES
+ ('P001',1200.00,'2026-10-01','2026-10-02 09:00:00'),
+ ('P002', 850.50,'2026-10-01','2026-10-02 09:00:00'),
+ ('P003', 990.00,'2026-10-01','2026-10-03 10:00:00');
+EXEC dbo.usp_Load_PolicyPremium @LoadType='INCREMENTAL';
+INSERT INTO dbo.TestResults SELECT SYSDATETIME(),'T1','Incremental loads new rows','3',
+  CAST(COUNT(*) AS VARCHAR), CASE WHEN COUNT(*)=3 THEN 'PASS' ELSE 'FAIL' END FROM dbo.FactPolicyPremium;
+
+------------------------------------------------------------
+-- T2 REAL-BUG EDGE CASE: caller forgets @LoadType and staging is EMPTY
+--     Expected: target untouched (3 rows). Everguard-class failure if 0.
+DELETE FROM stg.PolicyPremium;
+EXEC dbo.usp_Load_PolicyPremium;          -- no parameter passed
+INSERT INTO dbo.TestResults SELECT SYSDATETIME(),'T2','Missing @LoadType + empty source keeps target','3',
+  CAST(COUNT(*) AS VARCHAR), CASE WHEN COUNT(*)=3 THEN 'PASS' ELSE 'FAIL' END FROM dbo.FactPolicyPremium;
+
+------------------------------------------------------------
+-- T3 Watermark after empty run must not become NULL
+INSERT INTO dbo.TestResults SELECT SYSDATETIME(),'T3','Watermark not NULL after empty run','NOT NULL',
+  ISNULL(CONVERT(VARCHAR(30),LastLoadedAt,120),'NULL'),
+  CASE WHEN LastLoadedAt IS NOT NULL THEN 'PASS' ELSE 'FAIL' END
+FROM dbo.LoadWatermark WHERE TableName='FactPolicyPremium';
+
+------------------------------------------------------------
+-- T4 Boundary: row with UpdatedAt EQUAL to watermark must load
+DELETE FROM stg.PolicyPremium; DELETE FROM dbo.FactPolicyPremium;
+UPDATE dbo.LoadWatermark SET LastLoadedAt='2026-10-03 10:00:00';
+INSERT INTO stg.PolicyPremium VALUES ('P004',700.00,'2026-10-03','2026-10-03 10:00:00'); -- same second, arrived late
+EXEC dbo.usp_Load_PolicyPremium @LoadType='INCREMENTAL';
+INSERT INTO dbo.TestResults SELECT SYSDATETIME(),'T4','Equal-timestamp late row loads','1',
+  CAST(COUNT(*) AS VARCHAR), CASE WHEN COUNT(*)=1 THEN 'PASS' ELSE 'FAIL' END FROM dbo.FactPolicyPremium;
+
+------------------------------------------------------------
+-- T5 Idempotency + updates: same policy updated, run twice → still 1 row with new amount
+DELETE FROM stg.PolicyPremium; DELETE FROM dbo.FactPolicyPremium;
+UPDATE dbo.LoadWatermark SET LastLoadedAt='2026-10-01 00:00:00';
+INSERT INTO dbo.FactPolicyPremium VALUES ('P001',1200.00,'2026-10-01','2026-09-30 09:00:00');
+INSERT INTO stg.PolicyPremium     VALUES ('P001',1350.00,'2026-10-01','2026-10-04 09:00:00');
+EXEC dbo.usp_Load_PolicyPremium @LoadType='INCREMENTAL';
+EXEC dbo.usp_Load_PolicyPremium @LoadType='INCREMENTAL';
+INSERT INTO dbo.TestResults SELECT SYSDATETIME(),'T5','Update applied, no duplicates on re-run','1 row @1350',
+  CONCAT(COUNT(*),' row @',MAX(PremiumAmt)),
+  CASE WHEN COUNT(*)=1 AND MAX(PremiumAmt)=1350 THEN 'PASS' ELSE 'FAIL' END
+FROM dbo.FactPolicyPremium WHERE PolicyNo='P001';
+
+------------------------------------------------------------
+-- T6 Invalid load type is rejected
+BEGIN TRY
+  EXEC dbo.usp_Load_PolicyPremium @LoadType='FUL';   -- typo
+  INSERT INTO dbo.TestResults VALUES (SYSDATETIME(),'T6','Invalid @LoadType raises error','error','no error','FAIL');
+END TRY
+BEGIN CATCH
+  INSERT INTO dbo.TestResults VALUES (SYSDATETIME(),'T6','Invalid @LoadType raises error','error','error','PASS');
+END CATCH;
+
+SELECT * FROM dbo.TestResults ORDER BY RunAt, TestId;</pre></div>
+
+<div class="call bad"><b class="t">Expected result on the AI version</b>
+T1 PASS · <b>T2 FAIL</b> (0 rows — the FULL default wiped the table) · <b>T3 FAIL</b> (watermark NULL) · <b>T4 FAIL</b> (0 rows) · <b>T5 FAIL</b> (2 rows) · <b>T6 FAIL</b> (typo silently treated as incremental). One pass out of six from code that "looked fine".</div>
+
+<h3>12.4 Corrected procedure (re-run the same tests → all PASS)</h3>
+<div class="cb"><span class="lbl">T-SQL — fixed</span><button>Copy</button><pre>CREATE OR ALTER PROCEDURE dbo.usp_Load_PolicyPremium
+    @LoadType VARCHAR(20)                         -- no default: caller must choose
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF @LoadType NOT IN ('FULL','INCREMENTAL')
+        THROW 50001, 'Invalid @LoadType. Use FULL or INCREMENTAL.', 1;
+
+    DECLARE @SrcRows INT = (SELECT COUNT(*) FROM stg.PolicyPremium);
+    IF @SrcRows = 0
+    BEGIN
+        PRINT 'Staging empty - nothing loaded, target and watermark unchanged.';
+        RETURN;
+    END
+
+    DECLARE @Watermark DATETIME2(0) =
+        (SELECT ISNULL(MAX(LastLoadedAt),'1900-01-01') FROM dbo.LoadWatermark WHERE TableName='FactPolicyPremium');
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        IF @LoadType = 'FULL'
+        BEGIN
+            DELETE FROM dbo.FactPolicyPremium;
+            INSERT INTO dbo.FactPolicyPremium (PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt)
+            SELECT PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt FROM stg.PolicyPremium;
+        END
+        ELSE
+        BEGIN
+            -- latest version per policy at or after the watermark
+            ;WITH src AS (
+                SELECT PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt,
+                       ROW_NUMBER() OVER (PARTITION BY PolicyNo ORDER BY UpdatedAt DESC) AS rn
+                FROM stg.PolicyPremium
+                WHERE UpdatedAt >= @Watermark
+            )
+            SELECT PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt INTO #delta FROM src WHERE rn = 1;
+
+            UPDATE f SET f.PremiumAmt = d.PremiumAmt, f.EffectiveDate = d.EffectiveDate, f.UpdatedAt = d.UpdatedAt
+            FROM dbo.FactPolicyPremium f JOIN #delta d ON f.PolicyNo = d.PolicyNo;
+
+            INSERT INTO dbo.FactPolicyPremium (PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt)
+            SELECT d.PolicyNo, d.PremiumAmt, d.EffectiveDate, d.UpdatedAt
+            FROM #delta d
+            WHERE NOT EXISTS (SELECT 1 FROM dbo.FactPolicyPremium f WHERE f.PolicyNo = d.PolicyNo);
+        END
+
+        UPDATE dbo.LoadWatermark
+           SET LastLoadedAt = (SELECT MAX(UpdatedAt) FROM stg.PolicyPremium)
+         WHERE TableName = 'FactPolicyPremium';
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK;
+        THROW;
+    END CATCH
+END</pre></div>
+<div class="call warn"><b class="t">Gotcha in the fix</b> Using <code>&gt;=</code> means the last row at the watermark is re-read every run. That's safe <i>only because</i> the incremental branch upserts by <code>PolicyNo</code> — T5 proves it. Change one without the other and you get duplicates back.</div>
+
+<h3>12.5 Checklist + results (the deliverable)</h3>
+<div class="cb"><span class="lbl">TEMPLATE — Module 12 deliverable</span><button>Copy</button><pre>MODULE 12 — Validation checklist for AI-generated stored procedure
+Proc: ______________________   Generated by: Copilot (model: ______)   Prompt saved in: ______
+Real-bug edge case used: ______________________ (e.g., Everguard FULL load with empty source)
+
+| #  | Check                                                    | How tested                  | AI version | Fixed version |
+|----|----------------------------------------------------------|-----------------------------|------------|---------------|
+| 1  | Creates without error in DEV                             | CREATE OR ALTER             |            |               |
+| 2  | Matches written business rule (line review)              | Peer review                 |            |               |
+| 3  | Happy path row count                                     | T1                          |            |               |
+| 4  | REAL BUG: missing param + empty source keeps target      | T2                          |            |               |
+| 5  | Watermark never NULL / never moves backwards             | T3                          |            |               |
+| 6  | Boundary: equal-timestamp row loads                      | T4                          |            |               |
+| 7  | Idempotent re-run, updates applied, no duplicates        | T5                          |            |               |
+| 8  | Invalid parameter rejected                               | T6                          |            |               |
+| 9  | Error mid-proc rolls back fully                          | Force divide-by-zero        |            |               |
+| 10 | NULL business keys handled (rejected/logged)             | Seed PolicyNo = NULL        |            |               |
+| 11 | No PII in logs/PRINT output                              | Review                      |            |               |
+| 12 | Runtime acceptable on realistic volume                   | 100k-row seed, duration     |            |               |
+
+Score: AI version __/12   Fixed version __/12
+Biggest lesson: _______________________________________________</pre></div>
+<div class="call ok"><b class="t">✅ Success check</b> Your TestResults table shows at least one FAIL on the AI version and all PASS on the fixed version, and check #4 is tied to a real past incident.</div>
+</section>
+
+<!-- ============ WRAP ============ -->
+<section class="mod" id="wrap">
+<h2 class="mt"><span class="num">✓</span>Wrap-up &amp; submission</h2>
+<table>
+<tr><th>Module</th><th>Submit</th></tr>
+<tr><td>6</td><td>3-row token comparison table + your rule</td></tr>
+<tr><td>7</td><td>Usage evidence (screenshot / NDJSON / sent request) + one finding</td></tr>
+<tr><td>8</td><td>Round-trip log with two commit IDs + "one thing that broke"</td></tr>
+<tr><td>9</td><td>Onboarding checklist (section D tested)</td></tr>
+<tr><td>10</td><td>Three real situations + risks</td></tr>
+<tr><td>11</td><td>One-page Do/Don't card (PDF) + updated <code>copilot-instructions.md</code></td></tr>
+<tr><td>12</td><td>Completed checklist + <code>dbo.TestResults</code> screenshot</td></tr>
+</table>
+<div class="call trainer"><b class="t">Closing question for the room (2 min)</b> "Which artefact from today will you actually reuse next sprint?" — most teams pick the Module 9 checklist and the Module 12 test pattern.</div>
+<h4>References</h4>
+<ul>
+<li>GitHub Docs — REST API endpoints for Copilot usage metrics</li>
+<li>GitHub Blog — "GitHub Copilot is moving to usage-based billing" (Apr 2026) and "Copilot metrics is now generally available" (Feb 2026)</li>
+<li>GitHub Docs — Monitoring your Copilot usage and entitlements</li>
+<li>Microsoft Learn — Fabric: Get started with Git integration; Basic concepts in Git integration (permissions); Git integration tenant settings</li>
+</ul>
+</section>
+
+<footer>Modules 6–12 · Copilot, Fabric &amp; Responsible AI in Data Work · Prepared October 2026. Menu names and billing rules are version-sensitive — verify on your tenant before delivery.</footer>
+</main>
+</div>
+
+<script>
+document.querySelectorAll('.cb button').forEach(function(b){
+  b.addEventListener('click',function(){
+    var t=b.parentElement.querySelector('pre').innerText;
+    var done=function(){b.textContent='Copied ✓';b.classList.add('ok');setTimeout(function(){b.textContent='Copy';b.classList.remove('ok')},1600)};
+    if(navigator.clipboard){navigator.clipboard.writeText(t).then(done,function(){fallback(t);done()})}else{fallback(t);done()}
+  });
+});
+function fallback(t){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a)}
+function printCard(){document.body.classList.add('print-card-only');window.print();setTimeout(function(){document.body.classList.remove('print-card-only')},500)}
+</script>
+</body>
+</html>

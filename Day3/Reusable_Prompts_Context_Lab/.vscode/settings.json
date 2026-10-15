@@ -1,0 +1,97 @@
+{
+  // ==========================================
+  // General Editor & Formatting Settings
+  // ==========================================
+  "editor.formatOnSave": true,
+  "editor.rulers": [80, 100, 120],
+  "editor.wordWrap": "bounded",
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.autoSave": "afterDelay",
+
+  // ==========================================
+  // Python Settings (Airflow, PySpark, Scripts)
+  // ==========================================
+  "[python]": {
+    // We recommend using Ruff for lightning-fast linting & formatting
+    "editor.defaultFormatter": "charliermarsh.ruff", 
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll": "explicit"
+    }
+  },
+  // Pytest configuration
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": ["tests"],
+  // Pylance type checking (set to "strict" if your team requires strict typing)
+  "python.analysis.typeCheckingMode": "basic", 
+  
+  // ==========================================
+  // SQL Settings (Data Warehousing, Queries)
+  // ==========================================
+  "[sql]": {
+    "editor.defaultFormatter": "adpyke.vscode-sql-formatter",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4
+  },
+  "sql-formatter.uppercase": true, // Automatically uppercase SELECT, FROM, etc.
+  "sql-formatter.linesBetweenQueries": 2,
+
+  // ==========================================
+  // dbt (Data Build Tool) Settings
+  // ==========================================
+  "files.associations": {
+    "*.sql": "jinja-sql", // Ensures syntax highlighting works for dbt Jinja templates
+    "dbt_project.yml": "yaml"
+  },
+  "[jinja-sql]": {
+    "editor.defaultFormatter": "bastienboutonnet.vscode-dbt-formatter",
+    "editor.formatOnSave": true
+  },
+  "dbtFormatter.keywordCase": "upper",
+  "dbtFormatter.indentWidth": 4,
+
+  // ==========================================
+  // YAML & JSON Settings (Configs, Airflow, CI/CD)
+  // ==========================================
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2, // YAML traditionally uses 2 spaces
+    "editor.insertSpaces": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2
+  },
+
+  // ==========================================
+  // Jupyter Notebooks (Data Exploration)
+  // ==========================================
+  "notebook.lineNumbers": "on",
+  "notebook.cellToolbarLocation": {
+    "default": "right",
+    "jupyter-notebook": "left"
+  },
+
+  // ==========================================
+  // Workspace File Exclusion (Keep explorer clean)
+  // ==========================================
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true,
+    "**/target": true, // Hides dbt compiled/run target folders
+    "**/dbt_packages": true
+  }
+}

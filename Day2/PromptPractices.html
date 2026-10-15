@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Common Prompt Mistakes & Solutions</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 20px auto;
+            max-width: 800px;
+            color: #333;
+            background-color: #f4f7f6;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .mistake {
+            color: #e74c3c;
+            font-size: 1.25em;
+            margin-top: 0;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .mistake::before {
+            content: "❌ Mistake: ";
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .solution {
+            color: #27ae60;
+            font-size: 1.1em;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .solution::before {
+            content: "✅ Solution: ";
+        }
+        .example {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: Consolas, monospace;
+            font-size: 0.95em;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Common Prompt Engineering Mistakes & Solutions</h1>
+
+    <div class="card">
+        <h2 class="mistake">Being Too Vague or General</h2>
+        <p>Asking open-ended or excessively broad questions forces the AI to guess what you want, often resulting in generic or irrelevant responses.</p>
+        <div class="solution">Be Specific and Add Constraints</div>
+        <p>Provide exact details about what you want, including length, audience, and specific topics to cover.</p>
+        <div class="example">
+            <span class="label">Bad Prompt:</span> "Write about marketing."<br><br>
+            <span class="label">Good Prompt:</span> "Write a 300-word introduction for a blog post about digital marketing strategies for small local bakeries, aimed at business owners with no marketing experience."
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="mistake">Lacking Context or Persona</h2>
+        <p>Treating the AI like a basic search engine without providing background context leads to flat answers that don't match your specific scenario.</p>
+        <div class="solution">Assign a Role and Provide Background</div>
+        <p>Use role-playing (e.g., "Act as...") and explain <i>why</i> you need the information so the AI can tailor its tone and expertise.</p>
+        <div class="example">
+            <span class="label">Bad Prompt:</span> "Explain quantum physics."<br><br>
+            <span class="label">Good Prompt:</span> "Act as a middle school science teacher. Explain quantum physics using simple, everyday analogies that a 12-year-old would easily understand."
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="mistake">Not Specifying the Output Format</h2>
+        <p>If you don't tell the AI how you want the data presented, you might get a wall of text when you actually needed a table, a list, or code.</p>
+        <div class="solution">Explicitly State the Desired Format</div>
+        <p>Tell the AI exactly how to structure the final answer (e.g., bullet points, JSON, Markdown table, CSV).</p>
+        <div class="example">
+            <span class="label">Bad Prompt:</span> "Compare Python and JavaScript."<br><br>
+            <span class="label">Good Prompt:</span> "Compare Python and JavaScript. Present the comparison in a Markdown table with three columns: Feature, Python, and JavaScript. Include rows for ease of use, performance, and primary use cases."
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="mistake">Overloading with Too Many Tasks at Once</h2>
+        <p>Asking the AI to analyze data, write an essay, translate it, and format it all in one single massive prompt can cause it to skip steps or hallucinate.</p>
+        <div class="solution">Break Down Complex Tasks (Prompt Chaining)</div>
+        <p>Divide the big task into smaller, logical steps and feed them to the AI one by one.</p>
+        <div class="example">
+            <span class="label">Bad Prompt:</span> "Read this 5-page text, summarize it, extract all the names, turn them into a table, and then write a poem about it."<br><br>
+            <span class="label">Good Prompt:</span> <br>
+            <i>Step 1:</i> "Please summarize the main points of this text." <br>
+            <i>Step 2 (Next prompt):</i> "Now, extract all the names of people mentioned in the text and format them into a table."
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="mistake">Failing to Provide Examples (Zero-Shot Failure)</h2>
+        <p>When asking for a very specific style of reasoning or data extraction, relying solely on instructions can sometimes lead to inconsistent formatting.</p>
+        <div class="solution">Use Few-Shot Prompting</div>
+        <p>Provide one or two examples of the input and your desired output so the AI can mimic your exact pattern.</p>
+        <div class="example">
+            <span class="label">Bad Prompt:</span> "Extract the fruit names from this sentence: I bought apples and oranges."<br><br>
+            <span class="label">Good Prompt:</span> <br>
+            "Extract fruits from sentences.<br>
+            Input: 'She ate a banana.' -> Output: Banana<br>
+            Input: 'I love grapes and kiwis.' -> Output: Grapes, Kiwis<br>
+            Input: 'I bought apples and oranges.' -> Output:"
+        </div>
+    </div>
+
+</body>
+</html>

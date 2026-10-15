@@ -1,0 +1,22 @@
+Package validation performed on 14 October 2026 using the build environment.
+Your own execution may use a different interpreter.
+
+Loaded records: 3
+Total amount (INR): 2449.75
+
+test_bad_later_row_fails_instead_of_skipping (test_sales_loader.SalesLoaderTests.test_bad_later_row_fails_instead_of_skipping) ... ok
+test_blank_order_id (test_sales_loader.SalesLoaderTests.test_blank_order_id) ... ok
+test_duplicate_headers (test_sales_loader.SalesLoaderTests.test_duplicate_headers) ... ok
+test_incorrect_field_count (test_sales_loader.SalesLoaderTests.test_incorrect_field_count) ... ok
+test_input_is_not_modified (test_sales_loader.SalesLoaderTests.test_input_is_not_modified) ... ok
+test_invalid_amounts (test_sales_loader.SalesLoaderTests.test_invalid_amounts) ... ok
+test_invalid_dates (test_sales_loader.SalesLoaderTests.test_invalid_dates) ... ok
+test_missing_file (test_sales_loader.SalesLoaderTests.test_missing_file) ... ok
+test_missing_headers (test_sales_loader.SalesLoaderTests.test_missing_headers) ... ok
+test_utf8_bom (test_sales_loader.SalesLoaderTests.test_utf8_bom) ... ok
+test_valid_records_keep_order_and_exact_total (test_sales_loader.SalesLoaderTests.test_valid_records_keep_order_and_exact_total) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.007s
+
+OK
