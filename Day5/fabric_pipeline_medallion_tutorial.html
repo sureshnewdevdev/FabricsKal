@@ -1,0 +1,89 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fabric Pipeline to Medallion | Hands-on Tutorial</title><style>body{font:16px/1.65 Arial,sans-serif;margin:0;background:#f3f6fa;color:#182638}header{background:#122b4b;color:white;padding:26px 35px}header h1{margin:0}nav{position:fixed;top:0;bottom:0;width:230px;background:#fff;border-right:1px solid #ddd;padding:25px 12px;overflow:auto}nav a{display:block;padding:8px;color:#20528a;text-decoration:none}main{margin-left:260px;max-width:1050px;padding:25px}section{background:white;border-radius:12px;padding:25px;margin:18px 0;box-shadow:0 2px 10px #dce3ec}h2{color:#174d82}pre{background:#102237;color:#eaf5ff;padding:16px;border-radius:8px;overflow:auto}code{font-family:Consolas,monospace}table{border-collapse:collapse;width:100%}td,th{border:1px solid #cbd5e1;padding:9px;text-align:left}th{background:#e8eff8}.note{background:#fff4d8;padding:12px;border-left:4px solid #e4a528}.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.flow b{background:#dceafb;padding:13px;border-radius:8px}.btn{background:#1d5e9e;color:#fff;padding:8px 13px;border:0;border-radius:6px;cursor:pointer}details{margin:12px 0;border:1px solid #ddd;border-radius:8px;padding:10px}li{margin:7px 0}@media(max-width:850px){nav{position:static;width:auto}main{margin:0;padding:12px}}</style><script>function copy(id){navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>alert('Copied'))}</script></head><body><nav><b>Workshop Navigation</b><a href="#overview">Architecture</a><a href="#files">Input files</a><a href="#setup">Setup</a><a href="#ingest">Pipeline ingestion</a><a href="#bronze">Bronze notebook</a><a href="#silver">Silver notebook</a><a href="#gold">Gold notebook</a><a href="#orchestrate">Orchestration</a><a href="#prompt">Copilot prompt</a><a href="#quality">Best practices</a><a href="#test">Testing</a></nav><main><header><h1>Microsoft Fabric Pipeline → Medallion Architecture</h1><p>Hands-on retail sales workshop | Workspace + Lakehouse + Data Pipeline + PySpark Notebooks + VS Code Copilot</p></header><section id="overview"><h2>1. End-to-end architecture</h2><div class="flow"><b>Azure Blob CSV source</b> → <b>Fabric Copy Data pipeline</b> → <b>Lakehouse Files/input</b> → <b>Bronze Delta</b> → <b>Silver Delta</b> → <b>Gold Delta</b></div><p>Use one Fabric workspace, one Lakehouse, one Data Pipeline, and three notebooks. GitHub Copilot in VS Code writes and reviews PySpark; Fabric notebooks execute Spark.</p><p class="note">For a real pipeline copy demonstration, place the CSV files in a source accessible through a Fabric Copy activity, such as Azure Blob Storage or ADLS Gen2. A local PC folder is not a cloud source connection. If you do not have cloud storage, upload the files to Lakehouse Files/input manually and start with the notebooks; this bypasses the Copy activity.</p></section><section id="files"><h2>2. Input data and business rules</h2><p>Download the accompanying CSV files: sales.csv, products.csv and stores.csv. sales.csv has duplicate sale_id 1010, quantity 0, negative price, missing customer, and unknown store S99. Clean sales must have quantity &gt; 0, price ≥ 0, customer ID present, and matching store/product master.</p><table><tr><th>Input</th><th>Columns</th></tr><tr><td>sales.csv</td><td>sale_id, sale_date, store_id, product_id, customer_id, quantity, unit_price</td></tr><tr><td>products.csv</td><td>product_id, product_name, category</td></tr><tr><td>stores.csv</td><td>store_id, store_name, city</td></tr></table></section><section id="setup"><h2>3. Create workspace, Lakehouse and notebooks</h2><ol><li>Open <a href="https://app.fabric.microsoft.com" target="_blank">Microsoft Fabric</a> and choose a Fabric-enabled workspace.</li><li>Select <strong>New item → Lakehouse</strong>; name it <code>RetailLakehouse</code>.</li><li>Open Lakehouse → Files → create <code>input</code> folder.</li><li>Create notebooks named <code>01_Bronze_Ingestion</code>, <code>02_Silver_Cleansing</code>, <code>03_Gold_Aggregation</code>.</li><li>Attach <code>RetailLakehouse</code> as the default Lakehouse for each notebook.</li><li>In VS Code, install GitHub Copilot and Python extensions; use Copilot Chat to draft PySpark and paste reviewed code into the appropriate Fabric notebook.</li></ol></section><section id="ingest"><h2>4. Create pipeline and copy source CSVs</h2><ol><li>In the workspace select <strong>New item → Data pipeline</strong>. Name it <code>PL_Retail_Medallion</code>.</li><li>Choose <strong>Copy data</strong> and add a Copy activity named <code>Copy_CSV_to_Lakehouse</code>.</li><li>In <strong>Source</strong>, select your Azure Blob Storage or ADLS Gen2 connection and the folder containing the three CSV files. Authenticate with an authorized connection.</li><li>Choose <strong>Binary</strong> file format to preserve original CSV bytes. Configure source folder and copy pattern to include the three files.</li><li>In <strong>Destination</strong>, select <code>RetailLakehouse</code>, root folder <strong>Files</strong>, path <code>input</code>, and Binary format. Preserve file names.</li><li>Save and run the pipeline. Check <strong>Output</strong> for a successful Copy activity, then verify the three CSV files under <code>RetailLakehouse → Files → input</code>.</li></ol><p class="note">Depending on source and UI version, configure file selection and source/destination paths in the Copy activity's Source and Destination tabs. Avoid selecting Tables for this example because the Bronze notebook is responsible for converting raw files into Delta tables.</p></section><section id="bronze"><h2>5. Notebook 01 — Bronze ingestion</h2><p>Definition: Bronze preserves source data as raw, queryable Delta tables with ingestion metadata. Read every column as string to avoid discarding malformed values before validation.</p><button class="btn" onclick="copy('codebronze')">Copy Bronze code</button><pre id="codebronze">from pyspark.sql import functions as F
+from pyspark.sql.types import StructType, StructField, StringType
+
+schemas = {
+ 'sales': ['sale_id','sale_date','store_id','product_id','customer_id','quantity','unit_price'],
+ 'products': ['product_id','product_name','category'],
+ 'stores': ['store_id','store_name','city']
+}
+for name, columns in schemas.items():
+    schema = StructType([StructField(c, StringType(), True) for c in columns])
+    df = (spark.read.option('header',True).schema(schema)
+          .csv(f'Files/input/{name}.csv')
+          .withColumn('source_file', F.input_file_name())
+          .withColumn('ingestion_timestamp', F.current_timestamp()))
+    df.write.format('delta').mode('overwrite').saveAsTable(f'bronze_{name}')
+    print(name, spark.table(f'bronze_{name}').count())</pre><p>For this repeatable full-refresh classroom demo, overwrite Bronze tables. Production incremental ingestion needs a different design (batch IDs, checkpoints, merge/deduplication).</p></section><section id="silver"><h2>6. Notebook 02 — Silver validation and enrichment</h2><p>Definition: Silver converts raw strings to typed fields, rejects invalid rows, deduplicates and enriches valid sales with store and product information.</p><button class="btn" onclick="copy('codesilver')">Copy Silver code</button><pre id="codesilver">from pyspark.sql import functions as F
+from pyspark.sql.window import Window
+
+raw = spark.table('bronze_sales')
+products = spark.table('bronze_products').select('product_id','product_name','category')
+stores = spark.table('bronze_stores').select('store_id','store_name','city')
+
+sales = (raw.withColumn('sale_date', F.to_date('sale_date','yyyy-MM-dd'))
+ .withColumn('quantity',F.col('quantity').cast('int'))
+ .withColumn('unit_price',F.col('unit_price').cast('decimal(18,2)')))
+
+# Exact duplicates: keep one copy deterministically for this demo.
+sales = sales.dropDuplicates(['sale_id','sale_date','store_id','product_id',
+                               'customer_id','quantity','unit_price'])
+
+joined = (sales.join(products,'product_id','left')
+               .join(stores,'store_id','left'))
+reason = (F.when(F.col('sale_id').isNull(),'missing sale_id')
+ .when(F.col('sale_date').isNull(),'invalid date')
+ .when(F.col('customer_id').isNull() | (F.trim('customer_id')==''),'missing customer')
+ .when(F.col('quantity').isNull() | (F.col('quantity')<=0),'invalid quantity')
+ .when(F.col('unit_price').isNull() | (F.col('unit_price')<0),'invalid price')
+ .when(F.col('product_name').isNull(),'unknown product')
+ .when(F.col('store_name').isNull(),'unknown store'))
+joined = joined.withColumn('rejection_reason',reason)
+
+# Reject conflicting sale IDs rather than arbitrarily choosing a record.
+counts = joined.groupBy('sale_id').count().withColumnRenamed('count','id_count')
+joined = joined.join(counts,'sale_id','left')
+joined = joined.withColumn('rejection_reason',
+    F.when(F.col('id_count')>1,F.lit('conflicting sale_id'))
+     .otherwise(F.col('rejection_reason')))
+
+rejects = joined.filter(F.col('rejection_reason').isNotNull())
+valid = (joined.filter(F.col('rejection_reason').isNull())
+ .withColumn('revenue', F.col('quantity') * F.col('unit_price'))
+ .drop('rejection_reason','id_count'))
+rejects.write.format('delta').mode('overwrite').saveAsTable('silver_rejected_sales')
+valid.write.format('delta').mode('overwrite').saveAsTable('silver_sales')
+print('Valid:',valid.count(),'Rejected:',rejects.count())</pre><p>Expected: 7 valid unique transactions, 4 invalid unique transactions, plus 1 removed exact duplicate. This notebook stores the 4 invalid unique records in the rejection table; add a separate duplicate audit table if every source row must be reconciled individually.</p></section><section id="gold"><h2>7. Notebook 03 — Gold reporting</h2><p>Definition: Gold aggregates trusted Silver data for business analytics and KPI reporting.</p><button class="btn" onclick="copy('codegold')">Copy Gold code</button><pre id="codegold">from pyspark.sql import functions as F
+silver = spark.table('silver_sales')
+gold = (silver.groupBy('sale_date','store_id','store_name','city','category')
+ .agg(F.count('*').alias('transaction_count'),
+      F.sum('quantity').alias('units_sold'),
+      F.sum('revenue').alias('total_revenue')))
+gold.write.format('delta').mode('overwrite').saveAsTable('gold_daily_sales')
+display(spark.table('gold_daily_sales').orderBy('sale_date','store_id'))
+print('Total revenue:',gold.agg(F.sum('total_revenue')).first()[0])</pre></section><section id="orchestrate"><h2>8. Add Notebook activities to pipeline</h2><ol><li>Return to <code>PL_Retail_Medallion</code> and add three <strong>Notebook</strong> activities.</li><li>Rename activities <code>Run_Bronze</code>, <code>Run_Silver</code>, and <code>Run_Gold</code>.</li><li>For each activity, select its corresponding Fabric notebook.</li><li>Connect <strong>Copy_CSV_to_Lakehouse → Run_Bronze → Run_Silver → Run_Gold</strong> using <strong>On success</strong> dependencies.</li><li>Save and run the complete pipeline; check the Output tab and notebook run details.</li><li>Once validated, use Schedule for a recurring execution if needed.</li></ol><p>On-success dependencies prevent downstream transformations from running after an upstream failure. For production, add monitoring, failure notifications, retry settings and operational logs.</p></section><section id="prompt"><h2>9. Best VS Code Copilot prompt</h2><button class="btn" onclick="copy('prompttext')">Copy master prompt</button><pre id="prompttext">Act as a senior Microsoft Fabric PySpark engineer and code reviewer.
+Build a Retail Sales Medallion solution using ONE Fabric workspace,
+ONE Lakehouse, ONE Fabric Data Pipeline and THREE PySpark notebooks.
+Development is in VS Code with GitHub Copilot; execution is in Fabric.
+Input CSV files under Files/input: sales.csv, products.csv, stores.csv.
+Bronze: read CSV with explicit string schemas, add source metadata,
+write bronze_sales, bronze_products, bronze_stores as Delta tables.
+Silver: parse dates and decimal prices, validate quantity > 0,
+unit_price >= 0, nonblank customer, product/store keys; deduplicate
+exact records; reject conflicting sale IDs; store rejected rows with
+reasons; enrich valid sales and calculate revenue.
+Gold: group by sale_date, store, city and category; calculate
+transaction_count, units_sold and total_revenue.
+Create code for three independent Fabric notebook cells/scripts.
+Use Spark DataFrame APIs, not pandas, and no hard-coded credentials.
+Design rerunnable full-refresh demo; explain incremental-production changes.
+Explain GUI steps for Copy Data source to Lakehouse Files/input and
+Notebook activity success dependencies in the Fabric Data Pipeline.
+Include test assertions, expected record counts, edge cases,
+performance/security best practices and troubleshooting.
+Never claim code was executed; mark any assumptions explicitly.</pre></section><section id="quality"><h2>10. Engineering best practices</h2><table><tr><th>Practice</th><th>Reason</th></tr><tr><td>Raw files first</td><td>Preserve original input for audit and replay.</td></tr><tr><td>Explicit schema</td><td>Avoid inconsistent inference and accidental type coercion.</td></tr><tr><td>Reject invalid rows</td><td>Prevent incorrect revenue from entering Gold.</td></tr><tr><td>Deterministic deduplication</td><td>Prevent double counting and unpredictable survivor selection.</td></tr><tr><td>Idempotent reruns</td><td>A repeated batch should not inflate totals.</td></tr><tr><td>Pipeline dependencies</td><td>Only run Silver after Bronze succeeds, and Gold after Silver.</td></tr><tr><td>Least privilege and secrets management</td><td>Keep credentials out of notebooks and Copilot prompts.</td></tr><tr><td>Review Copilot output</td><td>AI-generated code may be wrong, insecure or incompatible.</td></tr><tr><td>Delta tables</td><td>Provide transactional consistency and efficient downstream reads.</td></tr><tr><td>Production incremental strategy</td><td>Use ingestion IDs, watermark/checkpoints and MERGE when replacing full-refresh behavior.</td></tr></table></section><section id="test"><h2>11. Validation and expected output</h2><pre>assert spark.table('bronze_sales').count() == 12
+assert spark.table('silver_sales').count() == 7
+assert spark.table('silver_rejected_sales').count() == 4
+from pyspark.sql import functions as F
+revenue = spark.table('silver_sales').agg(F.sum('revenue')).first()[0]
+print('Silver revenue:',revenue)
+assert revenue == 8050</pre><p class="note">The source has 12 rows; Silver retains 7 valid rows, 4 unique rejected rows, and removes 1 exact duplicate. The expected revenue is ₹8,050. These are workshop acceptance targets; run the code in your Fabric workspace to verify them.</p><details><summary>Common troubleshooting</summary><p><strong>TABLE_OR_VIEW_NOT_FOUND:</strong> Attach the same Lakehouse to each notebook and run Bronze first.<br><strong>Path not found:</strong> Confirm Files/input/sales.csv exists and check file-name case.<br><strong>Copy fails:</strong> Test source connection permissions and destination Files path.<br><strong>Notebook activity fails:</strong> Open activity run details; verify notebook selection and Lakehouse attachment.</p></details><p><strong>Microsoft documentation:</strong> <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/tutorial-lakehouse-data-ingestion">Lakehouse ingestion</a> · <a href="https://learn.microsoft.com/en-us/fabric/data-factory/copy-data-activity">Copy activity</a> · <a href="https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-notebook-load-data">Spark notebook load</a></p></section></main></body></html>

@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Validating AI-Generated Code</title>
+<style>
+:root{
+  --bg:#0d1117;--panel:#161b22;--panel2:#1c2330;--line:#2a3340;--text:#e6edf3;--muted:#9aa7b4;
+  --teal:#2bb3c0;--teal-d:#177E89;--orange:#FD8332;--green:#3fb950;--red:#f85149;--yellow:#e3b341;--purple:#a371f7;--code:#0a0e14;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:15.5px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+a{color:var(--teal)}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+nav{position:sticky;top:0;height:100vh;overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding:18px 14px}
+nav h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);margin:6px 8px 14px}
+nav a{display:block;color:var(--text);text-decoration:none;padding:7px 10px;border-radius:8px;font-size:14px}
+nav a:hover{background:var(--panel2)}
+nav a small{display:block;color:var(--muted);font-size:12px}
+main{padding:28px 44px 80px;max-width:1080px}
+.hero{background:linear-gradient(135deg,#123a40,#161b22 60%);border:1px solid var(--line);border-radius:16px;padding:26px 28px;margin-bottom:24px}
+.hero h1{margin:0 0 6px;font-size:28px}
+.hero p{margin:4px 0;color:var(--muted)}
+.pill{display:inline-block;background:var(--teal-d);color:#fff;border-radius:999px;padding:2px 10px;font-size:12px;margin-right:6px}
+.pill.o{background:var(--orange);color:#1b1b1b}
+section{border-top:1px solid var(--line);padding-top:24px;margin-top:34px}
+h2.st{font-size:22px;margin:0 0 4px}
+h2.st .n{color:var(--orange);margin-right:8px}
+.meta{color:var(--muted);font-size:13.5px;margin-bottom:12px}
+h3{color:var(--teal);margin:24px 0 8px;font-size:17.5px}
+h4{margin:16px 0 6px}
+table{width:100%;border-collapse:collapse;margin:12px 0 18px;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel2);color:var(--teal)}
+tr:nth-child(even) td{background:#121820}
+code{background:var(--panel2);padding:1px 6px;border-radius:5px;font-family:Consolas,"Cascadia Code",monospace;font-size:13.5px;color:#ffd7a8}
+.cb{position:relative;margin:14px 0 18px}
+.cb pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:16px;overflow:auto;margin:0;font:13.3px/1.55 Consolas,"Cascadia Code",monospace;color:#d6e2ee;max-height:640px}
+.cb .lbl{position:absolute;top:-10px;left:12px;background:var(--teal-d);color:#fff;font-size:11px;padding:1px 8px;border-radius:6px;letter-spacing:.04em}
+.cb .lbl.bad{background:var(--red)} .cb .lbl.good{background:#1f7a34}
+.cb button{position:absolute;top:8px;right:8px;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer}
+.cb button:hover{border-color:var(--teal)}
+.cb button.ok{background:var(--green);color:#08130a;border-color:var(--green)}
+.call{border-left:4px solid;border-radius:8px;padding:12px 16px;margin:14px 0;background:var(--panel)}
+.call b.t{display:block;margin-bottom:4px}
+.call.ok{border-color:var(--green)} .call.ok b.t{color:var(--green)}
+.call.warn{border-color:var(--yellow)} .call.warn b.t{color:var(--yellow)}
+.call.bad{border-color:var(--red)} .call.bad b.t{color:var(--red)}
+.call.info{border-color:var(--teal)} .call.info b.t{color:var(--teal)}
+.call.trainer{border-color:var(--purple)} .call.trainer b.t{color:var(--purple)}
+ol.steps{counter-reset:s;list-style:none;padding-left:0}
+ol.steps>li{counter-increment:s;position:relative;padding:8px 0 8px 44px;border-bottom:1px dashed var(--line)}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:8px;width:30px;height:30px;border-radius:50%;background:var(--teal-d);color:#fff;font-weight:600;display:flex;align-items:center;justify-content:center;font-size:14px}
+.timeline{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:14px 0}
+.timeline div{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--teal);border-radius:8px;padding:8px 10px;font-size:13px}
+.timeline b{display:block;color:var(--orange);font-size:12px}
+.flow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.flow span{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:13.5px}
+.flow i{color:var(--orange);font-style:normal}
+details{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 14px;margin:10px 0}
+details summary{cursor:pointer;color:var(--yellow);font-weight:600}
+/* interactive checklist */
+#chk select,#chk input{background:var(--code);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:13px;width:100%}
+#chk select.PASS{border-color:var(--green);color:var(--green)}
+#chk select.FAIL{border-color:var(--red);color:var(--red)}
+#chk td:nth-child(1){width:46px;font-weight:600;color:var(--orange)}
+#chk td:nth-child(4),#chk td:nth-child(5){width:110px}
+.score{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0}
+.score div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.score b{font-size:22px;display:block}
+.btn{background:var(--orange);color:#1b1b1b;border:0;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer;margin-right:8px}
+.btn.s{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 6px;font-size:12.5px;background:var(--panel2)}
+footer{color:var(--muted);font-size:13px;margin-top:60px;border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:900px){.layout{grid-template-columns:1fr}nav{position:static;height:auto}main{padding:20px 16px}.timeline{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <h2>Module 12</h2>
+  <a href="#plan">25-minute plan<small>timing + outputs</small></a>
+  <a href="#why">1 · Why "looks right" isn't enough<small>0:00–0:03</small></a>
+  <a href="#proc">2 · The AI-generated proc<small>0:03–0:06</small></a>
+  <a href="#design">3 · Build the checklist<small>0:06–0:12</small></a>
+  <a href="#realbug">4 · Real bug → test<small>the Everguard pattern</small></a>
+  <a href="#setup">5 · Setup the test bed<small>DEV only</small></a>
+  <a href="#run">6 · Run the harness<small>0:12–0:20</small></a>
+  <a href="#fix">7 · Fix &amp; re-run<small>0:20–0:24</small></a>
+  <a href="#record">8 · Record pass/fail<small>0:24–0:25 · interactive</small></a>
+  <a href="#gotchas">Gotchas &amp; extensions</a>
+</nav>
+
+<main>
+<div class="hero">
+  <span class="pill">GitHub Copilot</span><span class="pill">T-SQL</span><span class="pill o">Insurance data</span>
+  <h1>Validating AI-Generated Code</h1>
+  <p>Build a validation checklist for one AI-generated stored procedure, include a real-bug edge case, run it, and record pass/fail.</p>
+  <p>Hands-on · 25 minutes · works on SQL Server, Azure SQL Database, or a Fabric Warehouse (DEV only).</p>
+</div>
+
+<!-- PLAN -->
+<section id="plan" style="border-top:0;margin-top:0;padding-top:0">
+<h3>25-minute plan</h3>
+<div class="timeline">
+  <div><b>0:00–0:03</b>Why "looks right" fails</div>
+  <div><b>0:03–0:06</b>Read the AI proc</div>
+  <div><b>0:06–0:12</b>Design the checklist + real-bug test</div>
+  <div><b>0:12–0:20</b>Run harness on AI version</div>
+  <div><b>0:20–0:24</b>Apply fix, re-run</div>
+  <div><b>0:24–0:25</b>Record &amp; export</div>
+</div>
+<table>
+<tr><th>You will hand in</th><th>Format</th></tr>
+<tr><td>Validation checklist (9 scripted checks + 3 manual checks)</td><td>Section 8, exported as Markdown</td></tr>
+<tr><td>Evidence: <code>dbo.TestResults</code> summary for both versions</td><td>Screenshot or copied query output</td></tr>
+<tr><td>One sentence linking test T2 to a real past incident</td><td>In the export notes</td></tr>
+</table>
+<div class="call trainer"><b class="t">Trainer prep</b>
+<ul>
+<li>Each learner needs a <b>DEV</b> database they can create tables in. Options: a Fabric Warehouse in a trial workspace, an Azure SQL dev database, or SQL Server in Docker (command in Section 5).</li>
+<li>Run the whole harness once yourself the day before. Expected results are in Section 6.</li>
+<li>Bring the actual details of the Everguard FULL-load incident (what triggered it, how many rows, how long to recover). Section 4 uses it.</li>
+</ul></div>
+</section>
+
+<!-- 1 WHY -->
+<section id="why">
+<h2 class="st"><span class="n">1</span>Why "it looks right" isn't validation</h2>
+<div class="meta">0:00 – 0:03</div>
+<p>AI-generated SQL fails in a predictable way. It handles the <b>happy path</b> perfectly and quietly gets the <b>edges</b> wrong. Those edges are empty sources, equal timestamps, duplicate keys, bad parameters and mid-load failures. In data loads, edge-case bugs don't throw errors. They <b>delete or duplicate rows silently</b>, and you find out from a business user days later.</p>
+<div class="flow"><span>Compiles</span><i>→</i><span>Matches the rule</span><i>→</i><span>Happy path</span><i>→</i><span>Edge cases</span><i>→</i><span>Failure &amp; rollback</span><i>→</i><span>Operability</span></div>
+<p>Most people stop at step 3. Today's proc passes step 3 and fails almost everything after it.</p>
+<div class="call warn"><b class="t">Rule for the session</b> A human writes the <b>expected results</b>. You may ask Copilot to help <i>write</i> test code, but if the AI that wrote the proc also decides what "correct" means, it is grading its own homework.</div>
+</section>
+
+<!-- 2 PROC -->
+<section id="proc">
+<h2 class="st"><span class="n">2</span>The AI-generated procedure under test</h2>
+<div class="meta">0:03 – 0:06</div>
+<p>This is the prompt that produced it:</p>
+<div class="cb"><span class="lbl">PROMPT given to Copilot</span><button>Copy</button><pre>Write a T-SQL stored procedure dbo.usp_Load_PolicyPremium that loads policy
+premiums from stg.PolicyPremium into dbo.FactPolicyPremium. It should support
+FULL and INCREMENTAL loads. Incremental loads use a watermark stored in
+dbo.LoadWatermark (TableName, LastLoadedAt). Update the watermark after loading.</pre></div>
+<div class="call info"><b class="t">Why we use a fixed "as received" version</b> If every learner regenerates it, everyone gets slightly different code and the expected results won't line up. Use this baseline in class. As homework, regenerate with your own model and run the <b>same harness</b>. Comparing the results is a great discussion.</div>
+
+<div class="cb"><span class="lbl bad">T-SQL — AI version (as received) · create this first</span><button>Copy</button><pre>CREATE OR ALTER PROCEDURE dbo.usp_Load_PolicyPremium
+    @LoadType VARCHAR(20) = 'FULL'
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @Watermark DATETIME2(0) =
+        (SELECT ISNULL(MAX(LastLoadedAt), '1900-01-01')
+         FROM dbo.LoadWatermark WHERE TableName = 'FactPolicyPremium');
+
+    IF @LoadType = 'FULL'
+    BEGIN
+        DELETE FROM dbo.FactPolicyPremium;
+        INSERT INTO dbo.FactPolicyPremium (PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt)
+        SELECT PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt
+        FROM stg.PolicyPremium;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO dbo.FactPolicyPremium (PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt)
+        SELECT PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt
+        FROM stg.PolicyPremium
+        WHERE UpdatedAt > @Watermark;
+    END
+
+    UPDATE dbo.LoadWatermark
+       SET LastLoadedAt = (SELECT MAX(UpdatedAt) FROM stg.PolicyPremium)
+     WHERE TableName = 'FactPolicyPremium';
+END</pre></div>
+<h4>3-minute read: what do you notice? (write it down before opening the hints)</h4>
+<details><summary>Reveal the issues a careful reviewer should spot</summary>
+<table>
+<tr><th>Line</th><th>Problem</th><th>Consequence</th></tr>
+<tr><td><code>@LoadType = 'FULL'</code></td><td>Destructive mode is the <b>default</b></td><td>A caller that forgets the parameter wipes and reloads the table</td></tr>
+<tr><td><code>DELETE FROM …</code></td><td>No guard on source row count</td><td>Empty staging leaves the fact table empty</td></tr>
+<tr><td>No <code>BEGIN TRAN</code></td><td>DELETE commits before INSERT runs</td><td>If the INSERT fails, the data is gone</td></tr>
+<tr><td><code>UpdatedAt &gt; @Watermark</code></td><td>Strict "greater than"</td><td>Late rows stamped with the same second as the watermark are skipped forever</td></tr>
+<tr><td>Incremental = INSERT only</td><td>No update / no de-duplication</td><td>Changed policies get a second row, and premium totals double-count</td></tr>
+<tr><td>No key filter</td><td>NULL <code>PolicyNo</code> accepted</td><td>Orphan rows in the fact table</td></tr>
+<tr><td>No parameter validation</td><td><code>'FUL'</code> runs silently as incremental</td><td>Wrong load type with no error</td></tr>
+<tr><td>Watermark update</td><td><code>MAX</code> of an empty table = NULL</td><td>The next incremental reloads all of history (filter becomes &gt; 1900-01-01)</td></tr>
+</table></details>
+</section>
+
+<!-- 3 DESIGN -->
+<section id="design">
+<h2 class="st"><span class="n">3</span>Build the checklist: derive tests from the code</h2>
+<div class="meta">0:06 – 0:12</div>
+<p>Don't invent tests from a generic list. Walk the proc and ask these questions for each construct:</p>
+<table>
+<tr><th>When you see…</th><th>Ask…</th><th>Becomes test</th></tr>
+<tr><td>A parameter</td><td>What if it's missing? Misspelled? NULL?</td><td>T2, T8</td></tr>
+<tr><td><code>DELETE</code> / <code>TRUNCATE</code></td><td>What if the source is empty? What if the next step fails?</td><td>T2, T9</td></tr>
+<tr><td>A time filter (<code>&gt;</code>, <code>&gt;=</code>)</td><td>What about a row exactly on the boundary? A late arrival?</td><td>T4</td></tr>
+<tr><td>A business key</td><td>NULL key? Two versions in one batch? Already in target?</td><td>T5, T6, T7</td></tr>
+<tr><td>A watermark update</td><td>Can it become NULL? Can it move backwards?</td><td>T3</td></tr>
+<tr><td>The whole proc</td><td>Same result if run twice? Rolls back fully on error?</td><td>T5, T9</td></tr>
+</table>
+
+<h3>The checklist (9 scripted + 3 manual)</h3>
+<table>
+<tr><th>ID</th><th>Check</th><th>Expected (written by a human, from the business rule)</th></tr>
+<tr><td>T1</td><td>Happy path: incremental loads new rows</td><td>3 rows in fact</td></tr>
+<tr><td><b>T2</b></td><td><b>REAL BUG:</b> caller omits <code>@LoadType</code> and staging is empty</td><td>Target untouched, still 3 rows</td></tr>
+<tr><td>T3</td><td>Watermark after that run is not NULL and has not moved</td><td><code>2026-10-03 10:00:00</code></td></tr>
+<tr><td>T4</td><td>Boundary: late row with UpdatedAt equal to the watermark</td><td>1 row loaded</td></tr>
+<tr><td>T5</td><td>Changed policy is updated, and a re-run makes no duplicates</td><td>1 row for P001 at 1350.00</td></tr>
+<tr><td>T6</td><td>Two versions of the same policy in one batch</td><td>1 row at the latest amount (550.00)</td></tr>
+<tr><td>T7</td><td>NULL business key is rejected</td><td>0 NULL-key rows, 1 valid row</td></tr>
+<tr><td>T8</td><td>Invalid <code>@LoadType</code> (<code>'FUL'</code>) raises an error</td><td>Error raised</td></tr>
+<tr><td>T9</td><td>FULL load with one bad row (overflow) rolls back</td><td>Original 2 rows still present</td></tr>
+<tr><td>M1</td><td>Line-by-line review against the written business rule</td><td>Reviewer sign-off</td></tr>
+<tr><td>M2</td><td>No PII or connection details in PRINT, log or error text</td><td>Pass on review</td></tr>
+<tr><td>M3</td><td>Runtime on realistic volume (e.g., 1M staging rows)</td><td>Within the agreed SLA</td></tr>
+</table>
+<div class="call ok"><b class="t">✅ Checkpoint (0:12)</b> You can explain in one sentence why each test exists, pointing at a specific line of the proc.</div>
+</section>
+
+<!-- 4 REAL BUG -->
+<section id="realbug">
+<h2 class="st"><span class="n">4</span>Turning a real past bug into a test</h2>
+<p>The most valuable test in any checklist is the one that reproduces something that <b>already hurt you</b>. Use this four-line conversion:</p>
+<div class="cb"><span class="lbl">TEMPLATE — incident → test</span><button>Copy</button><pre>INCIDENT   : Everguard policy load ran as FULL instead of INCREMENTAL;
+             target was cleared and reloaded.            ← replace with real details
+TRIGGER    : load-type parameter not passed / defaulted to FULL,
+             and staging was empty or partial at run time.
+EXPECTED   : a load must never reduce the target when the source has no valid rows,
+             and FULL must never happen unless explicitly requested.
+ASSERTION  : run proc with NO @LoadType and EMPTY staging
+             → target row count unchanged (T2) and watermark unchanged (T3).</pre></div>
+<div class="call warn"><b class="t">Honest caveat</b> I don't have the actual Everguard incident details, so the trigger above is a structured guess based on "FULL-load issue". If the real cause was different (for example, a pipeline variable overriding the parameter, or a partial staging file), change T2's setup to reproduce <b>that</b> condition. A test for a guessed bug protects against the wrong thing.</div>
+<p>Other real-bug patterns worth converting from your team's history:</p>
+<ul>
+<li>A file arrived twice, so premiums were double-counted. Test: the same batch loaded twice gives the same totals.</li>
+<li>Timezone shift on <code>UpdatedAt</code>, so rows were skipped. Test: a row at the watermark in a different offset.</li>
+<li>A source column was widened, so the insert failed halfway. Test: T9 (overflow mid-load).</li>
+</ul>
+</section>
+
+<!-- 5 SETUP -->
+<section id="setup">
+<h2 class="st"><span class="n">5</span>Set up the test bed (DEV only)</h2>
+<div class="call bad"><b class="t">Never run this against a shared or prod database.</b> The harness deletes from <code>dbo.FactPolicyPremium</code>. Use a sandbox. If your real schema already has these table names, rename them to something like <code>dbo.zz_FactPolicyPremium</code> throughout.</div>
+
+<h4>Option A — SQL Server in Docker (quickest on a laptop)</h4>
+<div class="cb"><span class="lbl">BASH</span><button>Copy</button><pre>docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Train!ng2026" \
+  -p 1433:1433 --name sqltest -d mcr.microsoft.com/mssql/server:2022-latest
+# connect from VS Code (mssql extension) / SSMS / Azure Data Studio:
+#   server: localhost,1433   user: sa   password: Train!ng2026   (trust server certificate)</pre></div>
+<h4>Option B — Fabric Warehouse</h4>
+<ol class="steps">
+<li>Open a trial or DEV workspace and select <b>+ New item → Warehouse</b>. Name it <code>WH_Validation_Lab</code>.</li>
+<li>Click <b>New SQL query</b>. Run the setup below in one go.</li>
+</ol>
+
+<div class="cb"><span class="lbl">T-SQL — setup (run once)</span><button>Copy</button><pre>IF SCHEMA_ID('stg') IS NULL EXEC('CREATE SCHEMA stg');
+GO
+DROP TABLE IF EXISTS stg.PolicyPremium;
+DROP TABLE IF EXISTS dbo.FactPolicyPremium;
+DROP TABLE IF EXISTS dbo.LoadWatermark;
+GO
+-- staging is deliberately WIDER than the fact (14,2 vs 12,2) — realistic, and lets T9 force an overflow
+CREATE TABLE stg.PolicyPremium (
+    PolicyNo      VARCHAR(20)    NULL,
+    PremiumAmt    DECIMAL(14,2)  NULL,
+    EffectiveDate DATE           NULL,
+    UpdatedAt     DATETIME2(0)   NULL
+);
+CREATE TABLE dbo.FactPolicyPremium (
+    PolicyNo      VARCHAR(20)    NULL,
+    PremiumAmt    DECIMAL(12,2)  NULL,
+    EffectiveDate DATE           NULL,
+    UpdatedAt     DATETIME2(0)   NULL
+);
+CREATE TABLE dbo.LoadWatermark (
+    TableName     VARCHAR(100)   NOT NULL,
+    LastLoadedAt  DATETIME2(0)   NULL
+);
+GO
+IF OBJECT_ID('dbo.TestResults') IS NULL
+CREATE TABLE dbo.TestResults (
+    RunLabel  VARCHAR(30),
+    RunAt     DATETIME2(0),
+    TestId    VARCHAR(5),
+    TestName  VARCHAR(200),
+    Expected  VARCHAR(80),
+    Actual    VARCHAR(200),
+    Result    VARCHAR(4)
+);
+GO</pre></div>
+<p>Now create the <b>AI version</b> of the proc from Section 2.</p>
+<div class="call ok"><b class="t">✅ Check</b> <code>SELECT name FROM sys.procedures WHERE name = 'usp_Load_PolicyPremium';</code> returns 1 row.</div>
+</section>
+
+<!-- 6 RUN -->
+<section id="run">
+<h2 class="st"><span class="n">6</span>Run the harness against the AI version</h2>
+<div class="meta">0:12 – 0:20</div>
+<p>The harness is <b>one batch</b> (no <code>GO</code> inside), so variables survive between tests. Every proc call is wrapped in <code>TRY/CATCH</code>, so one failing test can't stop the rest. The only thing you change between runs is <code>@Run</code>.</p>
+<div class="cb"><span class="lbl">T-SQL — test harness (run as ONE batch)</span><button>Copy</button><pre>DECLARE @Run VARCHAR(30) = 'AI-v1';     -- ← change to 'Fixed-v2' after Section 7
+DECLARE @n INT, @nNull INT, @amt DECIMAL(14,2), @wm DATETIME2(0), @err NVARCHAR(4000);
+
+DELETE FROM dbo.TestResults WHERE RunLabel = @Run;   -- clean re-run
+
+--------------------------------------------------------------------------
+-- T1  Happy path: incremental loads 3 new rows
+--------------------------------------------------------------------------
+DELETE FROM stg.PolicyPremium; DELETE FROM dbo.FactPolicyPremium; DELETE FROM dbo.LoadWatermark;
+INSERT INTO dbo.LoadWatermark VALUES ('FactPolicyPremium', '2026-10-01 00:00:00');
+INSERT INTO stg.PolicyPremium VALUES
+ ('P001', 1200.00, '2026-10-01', '2026-10-02 09:00:00'),
+ ('P002',  850.50, '2026-10-01', '2026-10-02 09:00:00'),
+ ('P003',  990.00, '2026-10-01', '2026-10-03 10:00:00');
+SET @err = NULL;
+BEGIN TRY EXEC dbo.usp_Load_PolicyPremium @LoadType = 'INCREMENTAL'; END TRY
+BEGIN CATCH SET @err = ERROR_MESSAGE(); END CATCH;
+SELECT @n = COUNT(*) FROM dbo.FactPolicyPremium;
+INSERT INTO dbo.TestResults VALUES (@Run, SYSDATETIME(), 'T1', 'Happy path: incremental loads new rows',
+  '3 rows', CONCAT(@n, ' rows', ISNULL(' | err: ' + @err, '')),
+  CASE WHEN @n = 3 AND @err IS NULL THEN 'PASS' ELSE 'FAIL' END);
+
+--------------------------------------------------------------------------
+-- T2  REAL-BUG EDGE CASE (Everguard pattern):
+--     caller omits @LoadType AND staging is empty → target must be untouched
+--------------------------------------------------------------------------
+DELETE FROM stg.PolicyPremium;                    -- staging empty, fact still has 3 rows from T1
+SET @err = NULL;
+BEGIN TRY EXEC sp_executesql N'EXEC dbo.usp_Load_PolicyPremium;'; END TRY   -- no parameter
+BEGIN CATCH SET @err = ERROR_MESSAGE(); END CATCH;
+SELECT @n = COUNT(*) FROM dbo.FactPolicyPremium;
+INSERT INTO dbo.TestResults VALUES (@Run, SYSDATETIME(), 'T2', 'REAL BUG: no @LoadType + empty staging keeps target',
+  '3 rows', CONCAT(@n, ' rows', ISNULL(' | err: ' + LEFT(@err, 80), '')),
+  CASE WHEN @n = 3 THEN 'PASS' ELSE 'FAIL' END);
+
+--------------------------------------------------------------------------
+-- T3  Watermark not NULL and not moved by the empty run
+--------------------------------------------------------------------------
+SELECT @wm = LastLoadedAt FROM dbo.LoadWatermark WHERE TableName = 'FactPolicyPremium';
+INSERT INTO dbo.TestResults VALUES (@Run, SYSDATETIME(), 'T3', 'Watermark unchanged after empty run',
+  '2026-10-03 10:00:00', ISNULL(CONVERT(VARCHAR(19), @wm, 120), 'NULL'),
+  CASE WHEN @wm = '2026-10-03 10:00:00' THEN 'PASS' ELSE 'FAIL' END);
+
+--------------------------------------------------------------------------
+-- T4  Boundary: late row stamped EXACTLY at the watermark must load
+--------------------------------------------------------------------------
+DELETE FROM stg.PolicyPremium; DELETE FROM dbo.FactPolicyPremium;
+UPDATE dbo.LoadWatermark SET LastLoadedAt = '2026-10-03 10:00:00';
+INSERT INTO stg.PolicyPremium VALUES ('P004', 700.00, '2026-10-03', '2026-10-03 10:00:00');
+SET @err = NULL;
+BEGIN TRY EXEC dbo.usp_Load_PolicyPremium @LoadType = 'INCREMENTAL'; END TRY
+BEGIN CATCH SET @err = ERROR_MESSAGE(); END CATCH;
+SELECT @n = COUNT(*) FROM dbo.FactPolicyPremium WHERE PolicyNo = 'P004';
+INSERT INTO dbo.TestResults VALUES (@Run, SYSDATETIME(), 'T4', 'Boundary: equal-timestamp late row loads',
+  '1 row', CONCAT(@n, ' rows'), CASE WHEN @n = 1 THEN 'PASS' ELSE 'FAIL' END);
+
+--------------------------------------------------------------------------
+-- T5  Changed policy is UPDATED; running twice creates no duplicates
+--------------------------------------------------------------------------
+DELETE FROM stg.PolicyPremium; DELETE FROM dbo.FactPolicyPremium;
+UPDATE dbo.LoadWatermark SET LastLoadedAt = '2026-10-01 00:00:00';
+INSERT INTO dbo.FactPolicyPremium VALUES ('P001', 1200.00, '2026-10-01', '2026-09-30 09:00:00');
+INSERT INTO stg.PolicyPremium     VALUES ('P001', 1350.00, '2026-10-01', '2026-10-04 09:00:00');
+SET @err = NULL;
+BEGIN TRY
+  EXEC dbo.usp_Load_PolicyPremium @LoadType = 'INCREMENTAL';
+  EXEC dbo.usp_Load_PolicyPremium @LoadType = 'INCREMENTAL';   -- re-run
+END TRY
+BEGIN CATCH SET @err = ERROR_MESSAGE(); END CATCH;
+SELECT @n = COUNT(*), @amt = MAX(PremiumAmt) FROM dbo.FactPolicyPremium WHERE PolicyNo = 'P001';
+INSERT INTO dbo.TestResults VALUES (@Run, SYSDATETIME(), 'T5', 'Update applied, idempotent on re-run',
+  '1 row @ 1350.00', CONCAT(@n, ' row(s) @ ', @amt),
+  CASE WHEN @n = 1 AND @amt = 1350.00 THEN 'PASS' ELSE 'FAIL' END);
+
+--------------------------------------------------------------------------
+-- T6  Two versions of the same policy in ONE batch → keep latest
+--------------------------------------------------------------------------
+DELETE FROM stg.PolicyPremium; DELETE FROM dbo.FactPolicyPremium;
+UPDATE dbo.LoadWatermark SET LastLoadedAt = '2026-10-01 00:00:00';
+INSERT INTO stg.PolicyPremium VALUES
+ ('P010', 500.00, '2026-10-05', '2026-10-05 08:00:00'),
+ ('P010', 550.00, '2026-10-05', '2026-10-05 09:00:00');
+SET @err = NULL;
+BEGIN TRY EXEC dbo.usp_Load_PolicyPremium @LoadType = 'INCREMENTAL'; END TRY
+BEGIN CATCH SET @err = ERROR_MESSAGE(); END CATCH;
+SELECT @n = COUNT(*), @amt = MAX(PremiumAmt) FROM dbo.FactPolicyPremium WHERE PolicyNo = 'P010';
+INSERT INTO dbo.TestResults VALUES (@Run, SYSDATETIME(), 'T6', 'Duplicate versions in batch: latest wins',
+  '1 row @ 550.00', CONCAT(@n, ' row(s) @ ', @amt),
+  CASE WHEN @n = 1 AND @amt = 550.00 THEN 'PASS' ELSE 'FAIL' END);
+
+--------------------------------------------------------------------------
+-- T7  NULL business key is rejected, valid row still loads
+--------------------------------------------------------------------------
+DELETE FROM stg.PolicyPremium; DELETE FROM dbo.FactPolicyPremium;
+UPDATE dbo.LoadWatermark SET LastLoadedAt = '2026-10-01 00:00:00';
+INSERT INTO stg.PolicyPremium VALUES
+ (NULL,   100.00, '2026-10-05', '2026-10-05 10:00:00'),
+ ('P020', 200.00, '2026-10-05', '2026-10-05 10:00:00');
+SET @err = NULL;
+BEGIN TRY EXEC dbo.usp_Load_PolicyPremium @LoadType = 'INCREMENTAL'; END TRY
+BEGIN CATCH SET @err = ERROR_MESSAGE(); END CATCH;
+SELECT @nNull = COUNT(*) FROM dbo.FactPolicyPremium WHERE PolicyNo IS NULL;
+SELECT @n     = COUNT(*) FROM dbo.FactPolicyPremium WHERE PolicyNo = 'P020';
+INSERT INTO dbo.TestResults VALUES (@Run, SYSDATETIME(), 'T7', 'NULL key rejected, valid row loaded',
+  '0 null / 1 valid', CONCAT(@nNull, ' null / ', @n, ' valid'),
+  CASE WHEN @nNull = 0 AND @n = 1 THEN 'PASS' ELSE 'FAIL' END);
+
+--------------------------------------------------------------------------
+-- T8  Invalid @LoadType must raise an error (not run silently)
+--------------------------------------------------------------------------
+SET @err = NULL;
+BEGIN TRY EXEC dbo.usp_Load_PolicyPremium @LoadType = 'FUL'; END TRY      -- typo
+BEGIN CATCH SET @err = ERROR_MESSAGE(); END CATCH;
+INSERT INTO dbo.TestResults VALUES (@Run, SYSDATETIME(), 'T8', 'Invalid @LoadType raises error',
+  'error raised', ISNULL(LEFT(@err, 80), 'no error'),
+  CASE WHEN @err IS NOT NULL THEN 'PASS' ELSE 'FAIL' END);
+
+--------------------------------------------------------------------------
+-- T9  FULL load hits a bad row mid-insert → everything rolls back
+--------------------------------------------------------------------------
+DELETE FROM stg.PolicyPremium; DELETE FROM dbo.FactPolicyPremium;
+INSERT INTO dbo.FactPolicyPremium VALUES
+ ('P100', 1000.00, '2026-10-01', '2026-10-01 09:00:00'),
+ ('P101', 1100.00, '2026-10-01', '2026-10-01 09:00:00');
+INSERT INTO stg.PolicyPremium VALUES
+ ('P100', 1000.00,        '2026-10-06', '2026-10-06 09:00:00'),
+ ('P102', 99999999999.99, '2026-10-06', '2026-10-06 09:00:00');   -- overflows DECIMAL(12,2)
+SET @err = NULL;
+BEGIN TRY EXEC dbo.usp_Load_PolicyPremium @LoadType = 'FULL'; END TRY
+BEGIN CATCH SET @err = ERROR_MESSAGE(); END CATCH;
+SELECT @n = COUNT(*) FROM dbo.FactPolicyPremium WHERE PolicyNo IN ('P100', 'P101');
+INSERT INTO dbo.TestResults VALUES (@Run, SYSDATETIME(), 'T9', 'Mid-load failure rolls back (FULL)',
+  '2 original rows + error', CONCAT(@n, ' rows', ISNULL(' | err: ' + LEFT(@err, 60), ' | no error')),
+  CASE WHEN @n = 2 AND @err IS NOT NULL THEN 'PASS' ELSE 'FAIL' END);
+
+--------------------------------------------------------------------------
+SELECT TestId, TestName, Expected, Actual, Result
+FROM dbo.TestResults WHERE RunLabel = @Run ORDER BY TestId;</pre></div>
+
+<h4>Expected results on the AI version</h4>
+<details><summary>Reveal after you've run it (don't peek first)</summary>
+<table>
+<tr><th>Test</th><th>Result</th><th>What you'll see</th></tr>
+<tr><td>T1</td><td style="color:var(--green)">PASS</td><td>3 rows. The happy path is fine, which is why it looked right.</td></tr>
+<tr><td>T2</td><td style="color:var(--red)">FAIL</td><td><b>0 rows.</b> The default FULL plus empty staging wiped the table. This is the Everguard pattern reproduced.</td></tr>
+<tr><td>T3</td><td style="color:var(--red)">FAIL</td><td>NULL. The next incremental would reload all of history.</td></tr>
+<tr><td>T4</td><td style="color:var(--red)">FAIL</td><td>0 rows. The strict <code>&gt;</code> skipped the late row.</td></tr>
+<tr><td>T5</td><td style="color:var(--red)">FAIL</td><td>2 rows. The old and new premium are both in the fact table.</td></tr>
+<tr><td>T6</td><td style="color:var(--red)">FAIL</td><td>2 rows for P010.</td></tr>
+<tr><td>T7</td><td style="color:var(--red)">FAIL</td><td>1 NULL-key row loaded.</td></tr>
+<tr><td>T8</td><td style="color:var(--red)">FAIL</td><td>No error. The typo ran as incremental.</td></tr>
+<tr><td>T9</td><td style="color:var(--red)">FAIL</td><td>0 rows plus an overflow error. The DELETE committed before the INSERT failed.</td></tr>
+</table>
+<p><b>Score: 1 / 9.</b> This is code that compiled, ran and "worked" on the first try.</p></details>
+<div class="call ok"><b class="t">✅ Checkpoint (0:20)</b> Nine rows exist in <code>dbo.TestResults</code> for <code>AI-v1</code>, and T2 is FAIL.</div>
+</section>
+
+<!-- 7 FIX -->
+<section id="fix">
+<h2 class="st"><span class="n">7</span>Apply the fix and re-run</h2>
+<div class="meta">0:20 – 0:24</div>
+<div class="cb"><span class="lbl good">T-SQL — fixed version</span><button>Copy</button><pre>CREATE OR ALTER PROCEDURE dbo.usp_Load_PolicyPremium
+    @LoadType VARCHAR(20)                -- NO default: the caller must choose explicitly
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- 1. Validate the parameter (fixes T8)
+    IF @LoadType IS NULL OR @LoadType NOT IN ('FULL', 'INCREMENTAL')
+        THROW 50001, 'Invalid @LoadType. Pass FULL or INCREMENTAL explicitly.', 1;
+
+    DECLARE @Watermark DATETIME2(0) =
+        (SELECT ISNULL(MAX(LastLoadedAt), '1900-01-01')
+         FROM dbo.LoadWatermark WHERE TableName = 'FactPolicyPremium');
+
+    -- 2. Build a clean delta: valid keys only (T7), latest version per policy (T6),
+    --    boundary-inclusive filter for incremental (T4)
+    DROP TABLE IF EXISTS #delta;
+
+    SELECT PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt
+    INTO #delta
+    FROM (
+        SELECT PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt,
+               ROW_NUMBER() OVER (PARTITION BY PolicyNo ORDER BY UpdatedAt DESC) AS rn
+        FROM stg.PolicyPremium
+        WHERE PolicyNo IS NOT NULL
+          AND (@LoadType = 'FULL' OR UpdatedAt >= @Watermark)
+    ) s
+    WHERE rn = 1;
+
+    -- 3. Guard: nothing valid to load → change nothing (fixes T2, T3)
+    IF NOT EXISTS (SELECT 1 FROM #delta)
+    BEGIN
+        PRINT 'No valid source rows - target and watermark left unchanged.';
+        RETURN;
+    END
+
+    DECLARE @NewWatermark DATETIME2(0) = (SELECT MAX(UpdatedAt) FROM #delta);
+
+    -- 4. All-or-nothing (fixes T9)
+    BEGIN TRY
+        BEGIN TRAN;
+
+        IF @LoadType = 'FULL'
+        BEGIN
+            DELETE FROM dbo.FactPolicyPremium;
+            INSERT INTO dbo.FactPolicyPremium (PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt)
+            SELECT PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt FROM #delta;
+        END
+        ELSE
+        BEGIN
+            -- upsert by business key (fixes T5)
+            UPDATE f
+               SET f.PremiumAmt    = d.PremiumAmt,
+                   f.EffectiveDate = d.EffectiveDate,
+                   f.UpdatedAt     = d.UpdatedAt
+              FROM dbo.FactPolicyPremium f
+              JOIN #delta d ON f.PolicyNo = d.PolicyNo;
+
+            INSERT INTO dbo.FactPolicyPremium (PolicyNo, PremiumAmt, EffectiveDate, UpdatedAt)
+            SELECT d.PolicyNo, d.PremiumAmt, d.EffectiveDate, d.UpdatedAt
+            FROM #delta d
+            WHERE NOT EXISTS (SELECT 1 FROM dbo.FactPolicyPremium f WHERE f.PolicyNo = d.PolicyNo);
+        END
+
+        -- watermark never NULL, never moves backwards on incremental
+        UPDATE dbo.LoadWatermark
+           SET LastLoadedAt = CASE
+                 WHEN @LoadType = 'FULL' THEN @NewWatermark
+                 WHEN @NewWatermark > ISNULL(LastLoadedAt, '1900-01-01') THEN @NewWatermark
+                 ELSE LastLoadedAt END
+         WHERE TableName = 'FactPolicyPremium';
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK;
+        THROW;
+    END CATCH
+END</pre></div>
+<ol class="steps">
+<li>Run the fixed <code>CREATE OR ALTER</code> above.</li>
+<li>In the harness, change line 1 to <code>DECLARE @Run VARCHAR(30) = 'Fixed-v2';</code> and run it again.</li>
+<li>Run the comparison query:</li>
+</ol>
+<div class="cb"><span class="lbl">T-SQL — side-by-side summary</span><button>Copy</button><pre>SELECT TestId, TestName,
+       MAX(CASE WHEN RunLabel = 'AI-v1'    THEN Result END) AS AI_v1,
+       MAX(CASE WHEN RunLabel = 'Fixed-v2' THEN Result END) AS Fixed_v2
+FROM dbo.TestResults
+GROUP BY TestId, TestName
+ORDER BY TestId;</pre></div>
+<div class="call ok"><b class="t">✅ Success check (0:24)</b> <code>AI_v1</code> shows 1 PASS and 8 FAIL. <code>Fixed_v2</code> shows 9 PASS. If any fixed test fails, read its <code>Actual</code> column before changing anything. Then decide whether the <b>code</b> is wrong or the <b>expectation</b> is.</div>
+<div class="call warn"><b class="t">Gotcha inside the fix</b> The <code>&gt;=</code> filter re-reads the last row at the watermark on every run. That is only safe because the incremental branch <b>upserts</b> by <code>PolicyNo</code>, which T5 proves. If someone later "optimises" the upsert back to INSERT-only, T5 fails. That is exactly why the test stays in the suite.</div>
+</section>
+
+<!-- 8 RECORD -->
+<section id="record">
+<h2 class="st"><span class="n">8</span>Record pass/fail (interactive)</h2>
+<div class="meta">0:24 – 0:25 · selections are saved in this browser · export as Markdown for your submission</div>
+<p>
+<label>Proc: <input id="h_proc" value="dbo.usp_Load_PolicyPremium" style="background:var(--code);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 8px;width:260px"></label>
+&nbsp;<label>Model used: <input id="h_model" placeholder="e.g., the model from the picker" style="background:var(--code);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 8px;width:220px"></label>
+</p>
+<table id="chk">
+<thead><tr><th>ID</th><th>Check</th><th>Notes / actual value</th><th>AI version</th><th>Fixed version</th></tr></thead>
+<tbody></tbody>
+</table>
+<div class="score">
+  <div>AI version<b id="s_ai">0 / 12</b></div>
+  <div>Fixed version<b id="s_fx">0 / 12</b></div>
+</div>
+<p><label>Real incident behind T2 (one sentence):<br>
+<input id="h_incident" placeholder="e.g., Everguard load ran FULL with empty staging on <date>, <n> rows lost" style="width:100%;background:var(--code);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin-top:4px"></label></p>
+<p><label>Biggest lesson:<br>
+<input id="h_lesson" style="width:100%;background:var(--code);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin-top:4px"></label></p>
+<button class="btn" onclick="copyMd()">📋 Copy results as Markdown</button>
+<button class="btn s" onclick="downloadMd()">⬇ Download .md</button>
+<button class="btn s" onclick="resetChk()">Reset</button>
+<span id="mdmsg" style="color:var(--green);margin-left:8px"></span>
+</section>
+
+<!-- GOTCHAS -->
+<section id="gotchas">
+<h2 class="st"><span class="n">!</span>Gotchas &amp; extensions</h2>
+<table>
+<tr><th>Gotcha</th><th>What to do</th></tr>
+<tr><td>Harness stops at the first error</td><td>You split it with <code>GO</code> or ran only part of it. Run it as one batch. Every EXEC is wrapped in TRY/CATCH.</td></tr>
+<tr><td>T2 on the fixed version shows an error message</td><td>That's expected. The proc now refuses to run without <code>@LoadType</code>. The test passes because the target is untouched.</td></tr>
+<tr><td>Fabric Warehouse rejects a statement</td><td>The Fabric Warehouse T-SQL surface differs from SQL Server in places (temp tables, some DML and constraint features). Record it as a finding, then try the same harness on SQL Server or Azure SQL to separate "platform limitation" from "logic bug".</td></tr>
+<tr><td>Copilot "fixes" a failing test by changing the expected value</td><td>Reject it. Expected values come from the business rule, not from the code's current behaviour.</td></tr>
+<tr><td>All tests pass on your own regenerated proc</td><td>Good, but check that your tests can still <b>fail</b>. Temporarily break one line (e.g., <code>&gt;=</code> → <code>&gt;</code>) and confirm T4 goes red.</td></tr>
+</table>
+
+<h3>Using Copilot as a second reviewer (not as the judge)</h3>
+<div class="cb"><span class="lbl">PROMPT — after your own review, with #file pointing at the proc</span><button>Copy</button><pre>Review #file:usp_Load_PolicyPremium.sql against these rules. For each rule,
+answer PASS / FAIL / UNSURE and quote the exact line number. Do not rewrite the code.
+1. @LoadType has no default and invalid values raise an error.
+2. No DELETE/TRUNCATE can run when the source has zero valid rows.
+3. Delete + insert happen inside one transaction with rollback on error.
+4. Incremental filter includes rows equal to the watermark.
+5. Incremental load updates existing keys and never duplicates them.
+6. NULL business keys are excluded.
+7. Watermark can never become NULL or move backwards.
+Then list any edge case I have NOT covered.</pre></div>
+<p>The last line is the useful one. AI is decent at <i>suggesting</i> extra edge cases. A human still decides whether each one matters and what the correct expected result is.</p>
+
+<h3>Extensions (homework)</h3>
+<ul>
+<li><b>M3 performance:</b> seed 1M staging rows with a numbers CTE and time both versions. The <code>ROW_NUMBER</code> and upsert cost something, so record it.</li>
+<li><b>Safety ratio for FULL:</b> add a guard that refuses a FULL load when the delta is smaller than X% of the current target, and add a test for it.</li>
+<li><b>Automate:</b> wrap the harness in a pipeline step or a GitHub Action against a DEV database, so every PR touching the proc runs T1–T9.</li>
+<li><b>tSQLt:</b> on SQL Server / Azure SQL, port the tests to the tSQLt framework for proper isolation with fake tables.</li>
+</ul>
+</section>
+
+<footer>Module 12 · Validating AI-Generated Code · October 2026. The harness was traced by hand against both versions. Run it once on your target platform before class, because T-SQL support differs between SQL Server, Azure SQL and Fabric Warehouse.</footer>
+</main>
+</div>
+
+<script>
+// copy buttons
+document.querySelectorAll('.cb button').forEach(function(b){
+  b.addEventListener('click',function(){
+    var t=b.parentElement.querySelector('pre').innerText;
+    var done=function(){b.textContent='Copied ✓';b.classList.add('ok');setTimeout(function(){b.textContent='Copy';b.classList.remove('ok')},1600)};
+    if(navigator.clipboard){navigator.clipboard.writeText(t).then(done,function(){fb(t);done()})}else{fb(t);done()}
+  });
+});
+function fb(t){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a)}
+
+// interactive checklist
+var CHECKS=[
+ ['T1','Happy path: incremental loads new rows'],
+ ['T2','REAL BUG: no @LoadType + empty staging keeps target'],
+ ['T3','Watermark not NULL / unchanged after empty run'],
+ ['T4','Boundary: equal-timestamp late row loads'],
+ ['T5','Update applied, idempotent on re-run'],
+ ['T6','Duplicate versions in batch: latest wins'],
+ ['T7','NULL key rejected, valid row loaded'],
+ ['T8','Invalid @LoadType raises error'],
+ ['T9','Mid-load failure rolls back (FULL)'],
+ ['M1','Line-by-line review against business rule'],
+ ['M2','No PII / secrets in PRINT, logs, errors'],
+ ['M3','Runtime acceptable on realistic volume']
+];
+var KEY='m12-validation-v1', state={};
+try{state=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){state={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+var tb=document.querySelector('#chk tbody');
+function sel(id,col){
+  var v=(state[id]&&state[id][col])||'';
+  return '<select data-id="'+id+'" data-col="'+col+'" class="'+v+'">'+
+   ['','PASS','FAIL','N/A'].map(function(o){return '<option'+(o===v?' selected':'')+' value="'+o+'">'+(o||'—')+'</option>'}).join('')+'</select>';
+}
+CHECKS.forEach(function(c){
+  var tr=document.createElement('tr');
+  var note=(state[c[0]]&&state[c[0]].note)||'';
+  tr.innerHTML='<td>'+c[0]+'</td><td>'+c[1]+'</td><td><input data-id="'+c[0]+'" data-col="note" value="'+note.replace(/"/g,'&quot;')+'"></td><td>'+sel(c[0],'ai')+'</td><td>'+sel(c[0],'fx')+'</td>';
+  tb.appendChild(tr);
+});
+['h_proc','h_model','h_incident','h_lesson'].forEach(function(id){
+  var el=document.getElementById(id); if(state['_'+id]!==undefined) el.value=state['_'+id];
+  el.addEventListener('input',function(){state['_'+id]=el.value;save()});
+});
+tb.addEventListener('change',upd); tb.addEventListener('input',upd);
+function upd(e){
+  var el=e.target,id=el.dataset.id,col=el.dataset.col; if(!id)return;
+  state[id]=state[id]||{}; state[id][col]=el.value;
+  if(el.tagName==='SELECT') el.className=el.value;
+  save(); score();
+}
+function score(){
+  var a=0,f=0;
+  CHECKS.forEach(function(c){var s=state[c[0]]||{}; if(s.ai==='PASS')a++; if(s.fx==='PASS')f++;});
+  document.getElementById('s_ai').textContent=a+' / '+CHECKS.length;
+  document.getElementById('s_fx').textContent=f+' / '+CHECKS.length;
+}
+score();
+function md(){
+  var g=function(id){return document.getElementById(id).value||'—'};
+  var out='# Module 12 — Validation checklist\n\n**Proc:** '+g('h_proc')+'  \n**Model:** '+g('h_model')+'  \n**Date:** '+new Date().toISOString().slice(0,10)+'\n\n';
+  out+='| ID | Check | Notes | AI version | Fixed version |\n|---|---|---|---|---|\n';
+  CHECKS.forEach(function(c){var s=state[c[0]]||{};out+='| '+c[0]+' | '+c[1]+' | '+(s.note||'')+' | '+(s.ai||'')+' | '+(s.fx||'')+' |\n'});
+  out+='\n**Score:** AI '+document.getElementById('s_ai').textContent+' · Fixed '+document.getElementById('s_fx').textContent+'\n\n';
+  out+='**Real incident behind T2:** '+g('h_incident')+'\n\n**Biggest lesson:** '+g('h_lesson')+'\n';
+  return out;
+}
+function msg(t){var m=document.getElementById('mdmsg');m.textContent=t;setTimeout(function(){m.textContent=''},2000)}
+function copyMd(){var t=md();if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){msg('Copied ✓')},function(){fb(t);msg('Copied ✓')})}else{fb(t);msg('Copied ✓')}}
+function downloadMd(){var b=new Blob([md()],{type:'text/markdown'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='module12_validation_results.md';a.click();msg('Downloaded ✓')}
+function resetChk(){if(!confirm('Clear all recorded results?'))return;state={};save();location.reload()}
+</script>
+</body>
+</html>
